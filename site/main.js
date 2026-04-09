@@ -58,6 +58,13 @@ const renderTeam = (filter = '') => {
         const isOnline = (now - (u.lastSeen || 0)) < 30000;
         const isMe = state.currentUser && u.username === state.currentUser.username;
         
+        // Calculate active tasks for this user
+        const userActiveTasks = state.tasks.filter(t => t.assignee === u.username && !t.done).length;
+        
+        // Find matching department emoji
+        const deptInfo = departments.find(d => d.name === u.dept);
+        const emoji = deptInfo ? deptInfo.emoji : '👤';
+        
         return `
             <div class="user-card glass ${isMe ? 'me-card' : ''}">
                 <div class="user-avatar" style="border-color: ${isMe ? 'var(--accent-pink)' : 'var(--accent-cyan)'}">
@@ -65,14 +72,21 @@ const renderTeam = (filter = '') => {
                     <span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>
                 </div>
                 <h4 style="color:${isMe ? 'var(--accent-pink)' : 'var(--accent-cyan)'}">${u.username} ${isMe ? '(Siz)' : ''}</h4>
-                <p style="font-size:10px; color:var(--text-secondary); margin-bottom: 10px;">${u.dept}</p>
+                <p style="font-size:10px; color:var(--text-secondary); margin-bottom: 5px;">${emoji} ${u.dept}</p>
+                
+                <div class="user-task-badge" style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 20px; font-size: 10px; margin-bottom: 10px;">
+                    <span style="color: ${userActiveTasks > 0 ? 'var(--accent-cyan)' : 'var(--text-secondary)'}">
+                        ${userActiveTasks} Aktif Görev
+                    </span>
+                </div>
+
                 <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
                     <span class="${isOnline ? 'online-text' : 'offline-text'}">
                         ${isOnline ? '● ÇEVRİMİÇİ' : '○ ÇEVRİMDIŞI'}
                     </span>
                     ${!isMe ? `<button onclick="mockMessage('${u.username}')" class="btn-outline-sm" style="font-size: 9px; padding: 4px 10px;">MESAJ GÖNDER</button>` : ''}
                 </div>
-                <p style="font-size:11px; margin-top:5px; opacity:0.7">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
+                <p style="font-size:11px; margin-top:8px; opacity:0.7">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
             </div>
         `;
     }).join('');
