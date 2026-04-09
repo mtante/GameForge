@@ -1,0 +1,40 @@
+(function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))a(e);new MutationObserver(e=>{for(const i of e)if(i.type==="childList")for(const o of i.addedNodes)o.tagName==="LINK"&&o.rel==="modulepreload"&&a(o)}).observe(document,{childList:!0,subtree:!0});function n(e){const i={};return e.integrity&&(i.integrity=e.integrity),e.referrerPolicy&&(i.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?i.credentials="include":e.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function a(e){if(e.ep)return;e.ep=!0;const i=n(e);fetch(e.href,i)}})();const r={landing:document.getElementById("landing-view"),login:document.getElementById("login-view"),dashboard:document.getElementById("dashboard-view")},l=t=>{Object.keys(r).forEach(s=>{r[s].classList.add("hidden")}),r[t].classList.remove("hidden"),window.scrollTo(0,0)};document.getElementById("nav-portal").addEventListener("click",t=>{t.preventDefault(),l("login")});document.getElementById("hero-portal").addEventListener("click",t=>{t.preventDefault(),l("login")});document.getElementById("back-to-landing").addEventListener("click",t=>{t.preventDefault(),l("landing")});document.getElementById("do-login").addEventListener("click",()=>{const t=document.getElementById("login-email").value,s=document.getElementById("login-pass").value,n=document.getElementById("do-login");if(t!=="admin"||s!=="atss19"){alert("Erişim Reddedildi: Geçersiz Komutan Kimliği veya Şifresi.");return}n.innerText="BAŞLATILIYOR...",n.disabled=!0,setTimeout(()=>{n.innerText="OTURUMU BAŞLAT",n.disabled=!1,l("dashboard"),v()},1500)});document.getElementById("do-logout").addEventListener("click",()=>{l("landing")});let d=[{id:1,title:"Ana karakter hareket mekaniği",dept:"YAZILIM",status:"AKTİF",progress:"%80",done:!1,critical:!0},{id:2,title:"Bölüm 1 harita tasarımı",dept:"TASARIM",status:"AKTİF",progress:"%40",done:!1,critical:!0},{id:3,title:"Düşman yapay zeka sistemi",dept:"YAZILIM",status:"AKTİF",progress:"%20",done:!1,critical:!0},{id:4,title:"Ara sahne müzikleri",dept:"SES",status:"BEKLİYOR",progress:"%0",done:!1,critical:!1},{id:5,title:"Optimizasyon testleri",dept:"KALİTE GÜVENCE",status:"İNCELEME",progress:"%90",done:!1,critical:!1},{id:6,title:"Oyun içi satın alım arayüzü",dept:"TASARIM",status:"AKTİF",progress:"%60",done:!1,critical:!1}];const h=[{name:"YAZILIM",emoji:"⚙️",count:2,color:"var(--accent-cyan)",desc:"Oyun motoru, mekanikler ve yapay zeka."},{name:"TASARIM",emoji:"🎨",count:2,color:"var(--accent-purple)",desc:"Konsept, 3D modeller ve UI tasarımı."},{name:"SES",emoji:"🎵",count:1,color:"var(--accent-gold)",desc:"Müzik, efektler ve seslendirmeler."},{name:"KALİTE GÜVENCE",emoji:"🛡️",count:1,color:"var(--accent-pink)",desc:"Hata bulma ve performans."}];document.querySelectorAll(".dash-tab").forEach(t=>{t.addEventListener("click",s=>{document.querySelectorAll(".dash-tab").forEach(e=>e.classList.remove("active")),s.target.classList.add("active");const n=s.target.getAttribute("data-mod");document.querySelectorAll(".dash-module").forEach(e=>e.classList.add("hidden")),document.querySelectorAll(".dash-module").forEach(e=>e.classList.remove("active"));const a=document.getElementById("mod-"+n);a.classList.remove("hidden"),a.classList.add("active"),document.getElementById("dash-title").innerText=s.target.innerText})});window.toggleTask=t=>{const s=d.find(n=>n.id===t);s&&(s.done=!s.done,s.status=s.done?"TAMAMLANDI":"AKTİF",v())};const v=()=>{const t=document.getElementById("critical-tasks-list"),s=document.getElementById("all-tasks-list"),n=document.getElementById("departments-list"),a=d.filter(e=>e.critical).map(e=>`
+        <div class="task-item" style="cursor: pointer; border-color: ${e.done?"#00FF9D":"rgba(255,255,255,0.05)"}; opacity: ${e.done?"0.6":"1"}; transition: all 0.3s;" onclick="toggleTask(${e.id})">
+            <div class="task-info">
+                <h4 style="text-decoration: ${e.done?"line-through":"none"}">${e.title}</h4>
+                <span class="task-dept">${e.dept}</span>
+            </div>
+            <div class="task-meta">
+                <span class="task-status" style="color: ${e.done?"#00FF9D":"#FF2D78"}">${e.done?"TAMAM":e.progress}</span>
+            </div>
+        </div>
+    `).join("");t.innerHTML=a||'<p style="color:var(--text-secondary)">Kritik görev bulunmuyor.</p>',s.innerHTML=d.map(e=>`
+        <div class="task-item" style="cursor: pointer; border-color: ${e.done?"#00FF9D":"rgba(255,255,255,0.05)"}; opacity: ${e.done?"0.6":"1"}; transition: all 0.3s;" onclick="toggleTask(${e.id})">
+            <div class="task-info">
+                <h4 style="text-decoration: ${e.done?"line-through":"none"}">${e.title}</h4>
+                <span class="task-dept">${e.dept}</span>
+            </div>
+            <div class="task-meta">
+                <span class="task-status" style="color: ${e.done?"#00FF9D":"var(--text-secondary)"}">${e.status}</span>
+            </div>
+        </div>
+    `).join(""),n.innerHTML=h.map(e=>{const i=d.filter(o=>o.dept===e.name&&!o.done).length;return`
+        <div class="dept-card" style="border-top: 3px solid ${e.color}">
+            <div class="dept-card-header">
+                <span class="dept-icon">${e.emoji}</span>
+                <div class="dept-info">
+                    <h4 style="color: ${e.color}">${e.name}</h4>
+                    <p>${e.desc}</p>
+                </div>
+            </div>
+            <div class="dept-stats">
+                <div>
+                    <div class="dept-label">AKTİF GÖREV</div>
+                    <div class="dept-task-count" style="color: ${e.color}">${i}</div>
+                </div>
+            </div>
+        </div>
+    `}).join("")};window.addEventListener("load",()=>{const t=document.getElementById("loader");setTimeout(()=>{t.classList.add("fade-out")},1500)});const f=document.getElementById("chat-toggle"),E=document.getElementById("chat-close"),u=document.getElementById("chat-window"),c=document.getElementById("chat-messages"),m=document.getElementById("user-input"),L=document.getElementById("send-msg"),g=document.querySelector(".chat-badge");f.addEventListener("click",()=>{u.classList.toggle("hidden"),g.style.display="none"});E.addEventListener("click",()=>{u.classList.add("hidden")});const p=(t,s)=>{const n=document.createElement("div");n.classList.add("msg",s);const a=s==="bot"?"⚡":"👤";n.innerHTML=`
+        <div class="avatar">${a}</div>
+        <div class="content">${t}</div>
+    `,c.appendChild(n),c.scrollTop=c.scrollHeight},y=()=>{const t=m.value.trim();t&&(p(t,"user"),m.value="",setTimeout(()=>{const s=["Mesajını geliştirici ekibine ilettim. Lütfen beklemede kal.","Görev parametreleri güncellendi. İnceliyoruz.","Proje istihbarat verilerine erişiliyor... lütfen bekle.","Forge şu anda %95 verimlilikte çalışıyor. Tüm sistemler yeşil."],n=s[Math.floor(Math.random()*s.length)];p(n,"bot")},1e3))};L.addEventListener("click",y);m.addEventListener("keypress",t=>{t.key==="Enter"&&y()});document.querySelectorAll('a[href^="#"]').forEach(t=>{t.addEventListener("click",function(s){s.preventDefault(),document.querySelector(this.getAttribute("href")).scrollIntoView({behavior:"smooth"})})});setTimeout(()=>{u.classList.contains("hidden")&&(g.style.display="flex")},3e3);window.particlesJS&&particlesJS("particles-js",{particles:{number:{value:60,density:{enable:!0,value_area:800}},color:{value:["#00E5FF","#8B5CFF","#FF2D78"]},shape:{type:"circle"},opacity:{value:.5,random:!0,anim:{enable:!0,speed:1,opacity_min:.1,sync:!1}},size:{value:3,random:!0,anim:{enable:!1}},line_linked:{enable:!0,distance:150,color:"#00E5FF",opacity:.2,width:1},move:{enable:!0,speed:2,direction:"none",random:!0,straight:!1,out_mode:"out",bounce:!1}},interactivity:{detect_on:"canvas",events:{onhover:{enable:!0,mode:"grab"},onclick:{enable:!0,mode:"push"},resize:!0},modes:{grab:{distance:140,line_linked:{opacity:.8}},push:{particles_nb:4}}},retina_detect:!0});
