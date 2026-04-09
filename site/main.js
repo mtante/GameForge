@@ -113,11 +113,16 @@ document.getElementById('back-to-landing').addEventListener('click', (e) => { e.
 
 // --- DASHBOARD LOGIC ---
 const departments = [
-    { name: "YAZILIM", emoji: "⚙️", color: "#00E5FF", desc: "Engine ve Mekanik" },
-    { name: "TASARIM", emoji: "🎨", color: "#8B5CFF", desc: "Visual ve UI" },
+    { name: "FİKİR VE KONSEPT", emoji: "💡", color: "#FFEB3B", desc: "Zihin Haritası ve Konsept Art" },
+    { name: "OYUN DİZAYNI", emoji: "🎮", color: "#00E5FF", desc: "Mekanik ve Sistem Dizaynı" },
+    { name: "YAZILIM", emoji: "⚙️", color: "#00FF9D", desc: "Engine ve Mekanik Kodlama" },
+    { name: "TASARIM", emoji: "🎨", color: "#8B5CFF", desc: "3D Modelleme ve UI" },
+    { name: "HİKAYE VE LORE", emoji: "📜", color: "#FF9800", desc: "Senaryo ve Dünya İnşası" },
+    { name: "SEVİYE TASARIMI", emoji: "🏔️", color: "#4CAF50", desc: "Level ve Çevre Tasarımı" },
     { name: "SES", emoji: "🎵", color: "#FFD700", desc: "Audio ve SFX" },
     { name: "KALİTE GÜVENCE", emoji: "🛡️", color: "#FF2D78", desc: "Hata Ayıklama" },
-    { name: "ÜRETİM", emoji: "📋", color: "#00FF9D", desc: "Planlama" }
+    { name: "ÜRETİM", emoji: "📋", color: "#607D8B", desc: "Planlama ve Yönetim" },
+    { name: "PAZARLAMA VE PR", emoji: "📢", color: "#E91E63", desc: "Tanıtım ve Sosyal Medya" }
 ];
 
 // Tabs
