@@ -134,6 +134,14 @@ try {
     });
 
     console.log("GameForge Cloud: Robust Granular Sync Initialized.");
+    
+    // FORCED INITIAL SYNC: Push everything from local storage to the cloud once 
+    // to ensure historical users/tasks on this device are visible to others.
+    setTimeout(() => {
+        saveState();
+        if(!views.dashboard.classList.contains('hidden')) renderDashboard();
+    }, 2000);
+
 } catch(e) {
     console.error("Cloud Sync Error:", e);
 }
