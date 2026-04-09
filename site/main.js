@@ -31,120 +31,123 @@ const saveState = () => {
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
 
-    // --- ROBUST CLOUD SYNC (GUN.JS) ---
-    if(window.isCloudActive) {
-        const studioKey = 'GameForge_Pro_Global_v21';
-        const now = Date.now();
-        
-        state.users.forEach(u => {
-            window.cloud.get(studioKey + '_users').get(u.username).put({ ...u, updatedAt: now });
-        });
-        state.tasks.forEach(t => {
-            window.cloud.get(studioKey + '_tasks').get(t.id).put({ ...t, updatedAt: now });
-        });
-        state.pendingActions.forEach(a => {
-            window.cloud.get(studioKey + '_actions').get(a.id).put({
-                ...a,
-                data: JSON.stringify(a.data),
-                updatedAt: now
-            });
-        });
-        window.cloud.get(studioKey + '_log').put({ items: JSON.stringify(state.activityLog), updatedAt: now });
-    }
+    // --- LIVE REST DATABASE (JSONBLOB) ---
+    const DB_URL = "https://jsonblob.com/api/jsonBlob/019d73bb-0d0a-7630-ba13-0d5cb6a58d64";
+    window.isCloudActive = true;
+    
+    // Non-blocking background push
+    fetch(DB_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+            users: state.users,
+            tasks: state.tasks,
+            pendingActions: state.pendingActions,
+            activityLog: state.activityLog
+        })
+    }).catch(e => console.error("Cloud push failed:", e));
 };
 
-// --- ROBUST CLOUD INTEGRATION ---
-window.isCloudActive = false;
-try {
-    // Extensive list of redundant public relays for high reliability across all devices
-    window.cloud = Gun([
-        'https://gun-manhattan.herokuapp.com/gun',
-        'https://relay.peer.ooo/gun',
-        'https://gunjs.herokuapp.com/gun',
-        'https://gun-server.herokuapp.com/gun',
-        'https://dletta.herokuapp.com/gun',
-        'https://gun-us.herokuapp.com/gun',
-        'https://gun-eu.herokuapp.com/gun'
-    ]);
-    window.isCloudActive = true;
-    const studioKey = 'GameForge_Pro_Global_v21'; // New unique namespace
+// --- ROBUST LIVE SYNC ENGINE ---
+window.isCloudActive = true;
+const DB_URL = "https://jsonblob.com/api/jsonBlob/019d73bb-0d0a-7630-ba13-0d5cb6a58d64";
+let isPolling = false;
 
-    const statusBadge = document.getElementById('server-status');
-    if(statusBadge) {
-        statusBadge.innerText = "CLOUD SYNC: ACTIVE";
-        statusBadge.classList.replace('offline', 'online');
+const pollCloud = async () => {
+    if(isPolling) return;
+    isPolling = true;
+    try {
+        const res = await fetch(DB_URL, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+        const cloudData = await res.json();
+        
+        let hasChanges = false;
+
+        // Merge logic based on timestamps/lengths
+        if(cloudData.users) {
+            cloudData.users.forEach(cu => {
+                const idx = state.users.findIndex(u => u.username === cu.username);
+                if(idx === -1) {
+                    state.users.push(cu); hasChanges = true;
+                } else if ((cu.updatedAt || 0) > (state.users[idx].updatedAt || 0)) {
+                    state.users[idx] = cu; hasChanges = true;
+                }
+            });
+            // Handle deletions (if it's not in cloud anymore but is local)
+            state.users = state.users.filter(u => {
+                if(!cloudData.users.find(c => c.username === u.username)) {
+                    hasChanges = true; return false;
+                }
+                return true;
+            });
+        }
+
+        if(cloudData.tasks) {
+            cloudData.tasks.forEach(ct => {
+                const idx = state.tasks.findIndex(t => t.id === ct.id);
+                if(idx === -1) {
+                    state.tasks.push(ct); hasChanges = true;
+                } else if ((ct.updatedAt || 0) > (state.tasks[idx].updatedAt || 0)) {
+                    state.tasks[idx] = ct; hasChanges = true;
+                }
+            });
+            // Handle deletions
+            state.tasks = state.tasks.filter(t => {
+                if(!cloudData.tasks.find(c => c.id === t.id)) {
+                    hasChanges = true; return false;
+                }
+                return true;
+            });
+        }
+
+        if(cloudData.pendingActions) {
+            cloudData.pendingActions.forEach(ca => {
+                const idx = state.pendingActions.findIndex(a => a.id === ca.id);
+                if(idx === -1) {
+                    state.pendingActions.push(ca); hasChanges = true;
+                } else if ((ca.updatedAt || 0) > (state.pendingActions[idx].updatedAt || 0)) {
+                    state.pendingActions[idx] = ca; hasChanges = true;
+                }
+            });
+            state.pendingActions = state.pendingActions.filter(a => {
+                if(!cloudData.pendingActions.find(c => c.id === a.id)) return false;
+                return true;
+            });
+        }
+
+        if(cloudData.activityLog && cloudData.activityLog.length > state.activityLog.length) {
+            state.activityLog = cloudData.activityLog;
+            hasChanges = true;
+        }
+
+        if(hasChanges) {
+            Store.set('users', state.users);
+            Store.set('tasks', state.tasks);
+            Store.set('pendingActions', state.pendingActions);
+            Store.set('activityLog', state.activityLog);
+            if(!views.dashboard.classList.contains('hidden')) {
+                renderDashboard();
+            }
+        }
+
+        const statusBadge = document.getElementById('server-status');
+        if(statusBadge) {
+            statusBadge.innerText = "LIVE SERVER: ACTIVE";
+            statusBadge.classList.replace('offline', 'online');
+        }
+    } catch(e) {
+        console.warn("Pull timeout, retrying...");
     }
+    isPolling = false;
+};
 
-    // LISTENER: Users
-    window.cloud.get(studioKey + '_users').map().on((u, username) => {
-        if(!u) return;
-        const idx = state.users.findIndex(user => user.username === username);
-        if(idx === -1) {
-            state.users.push(u);
-        } else {
-            // Only update if cloud has newer data
-            if((u.updatedAt || 0) > (state.users[idx].updatedAt || 0)) {
-                state.users[idx] = { ...state.users[idx], ...u };
-            }
-        }
-        if(!views.dashboard.classList.contains('hidden')) renderTeam();
-    });
-
-    // LISTENER: Tasks
-    window.cloud.get(studioKey + '_tasks').map().on((t, id) => {
-        if(!t) return;
-        const idx = state.tasks.findIndex(task => task.id == id);
-        if(idx === -1) {
-            state.tasks.push(t);
-        } else {
-            // Only update if cloud has newer data
-            if((t.updatedAt || 0) > (state.tasks[idx].updatedAt || 0)) {
-                state.tasks[idx] = { ...state.tasks[idx], ...t };
-            }
-        }
-        if(!views.dashboard.classList.contains('hidden')) renderDashboard();
-    });
-
-    // LISTENER: Actions
-    window.cloud.get(studioKey + '_actions').map().on((a, id) => {
-        if(!a) return;
-        const idx = state.pendingActions.findIndex(action => action.id == id);
-        const parsedAction = { ...a, data: a.data ? JSON.parse(a.data) : null };
-        if(idx === -1) {
-            state.pendingActions.push(parsedAction);
-        } else {
-            // Priority to newer data
-            if((a.updatedAt || 0) > (state.pendingActions[idx].updatedAt || 0)) {
-                state.pendingActions[idx] = parsedAction;
-            }
-        }
-        if(!views.dashboard.classList.contains('hidden')) renderAdmin();
-    });
-
-    // LISTENER: Logs
-    window.cloud.get(studioKey + '_log').on((data) => {
-        if(data && data.items) {
-            const cloudLog = JSON.parse(data.items);
-            // Simple log merge: if cloud has more/newer logs, take it
-            if(cloudLog.length >= state.activityLog.length) {
-                state.activityLog = cloudLog;
-            }
-            if(!views.dashboard.classList.contains('hidden')) renderTeam();
-        }
-    });
-
-    console.log("GameForge Cloud: Robust Granular Sync Initialized.");
-    
-    // FORCED INITIAL SYNC: Push everything from local storage to the cloud once 
-    // to ensure historical users/tasks on this device are visible to others.
-    setTimeout(() => {
-        saveState();
-        if(!views.dashboard.classList.contains('hidden')) renderDashboard();
-    }, 2000);
-
-} catch(e) {
-    console.error("Cloud Sync Error:", e);
-}
+console.log("GameForge Server: REST API Active.");
+// Initial pull & Push local state
+pollCloud().then(() => saveState());
+// Poll every 3 seconds for near-real-time updates
+setInterval(pollCloud, 3000);
 
 // Pulse to keep session alive and update online status
 setInterval(() => {
