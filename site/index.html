@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameForge | Mission Command Center</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loader" class="loader-overlay">
+            <div class="loader-content">
+                <div class="neon-icon">⚡</div>
+                <h1 class="glitch" data-text="GAMEFORGE">GAMEFORGE</h1>
+                <div class="loader-bar">
+                    <div class="loader-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="container">
+                <div class="logo">
+                    <span class="icon">⚡</span>
+                    <span class="text">GAMEFORGE</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#features">Özellikler</a></li>
+                    <li><a href="#intel">Proje Intel</a></li>
+                    <li><a href="#" id="nav-portal">Web Portal</a></li>
+                    <li><a href="#download" class="btn-primary">APK İndir</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main id="main-content">
+            <!-- Landing View -->
+            <div id="landing-view">
+                <!-- Hero Section -->
+                <section class="hero">
+                    <div class="hero-bg"></div>
+                    <div class="container">
+                        <div class="hero-content">
+                            <h2 class="badge">SİSTEM HAZIR</h2>
+                            <h1>OYUN EFSANENİ <br><span class="highlight">İNŞA ET</span></h1>
+                            <p>Modern oyun geliştiricileri için elit görev komuta merkezi. Projenizi kritik görev hassasiyetiyle takip edin, yönetin ve geliştirin.</p>
+                            <div class="hero-btns">
+                                <a href="#download" class="btn-glow">İNDİRMEYE ERİŞ</a>
+                                <a href="#" id="hero-portal" class="btn-outline">PORTALA GİRİŞ</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Features -->
+                <section id="features" class="features">
+                    <div class="container">
+                        <div class="section-header">
+                            <h2>TEMEL YETENEKLER</h2>
+                            <p>Yüksek performanslı geliştirme ekipleri için gelişmiş takip.</p>
+                        </div>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="card-icon">🎯</div>
+                                <h3>Görev Kontrolü</h3>
+                                <p>Genel proje sağlığı ve kritik görevlerin takibi için gerçek zamanlı gösterge paneli.</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="card-icon">🏗️</div>
+                                <h3>Departman Günlükleri</h3>
+                                <p>Yazılım, Tasarım, Ses ve Kalite Kontrol iş akışları için bölümlenmiş takip.</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="card-icon">🔍</div>
+                                <h3>Proje Intel Verisi</h3>
+                                <p>Oyun projenizin yol haritası, motor durumu ve kilometre taşları hakkında derinlemesine bilgi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="login-view" class="hidden">
+                <section class="auth-section">
+                    <div class="auth-card glass">
+                        <div class="auth-header">
+                            <div class="auth-logo">⚡</div>
+                            <h2>GÖREV ERİŞİMİ</h2>
+                            <p>Komuta Oturumunu Başlatın</p>
+                        </div>
+                        <div class="auth-body">
+                            <div class="input-group">
+                                <label>KOMUTAN E-POSTA / KİMLİĞİ</label>
+                                <input type="text" id="login-email" placeholder="admin">
+                            </div>
+                            <div class="input-group">
+                                <label>ERİŞİM ŞİFRESİ</label>
+                                <input type="password" id="login-pass" placeholder="••••••••">
+                            </div>
+                            <button id="do-login" class="btn-glow full-width">OTURUMU BAŞLAT</button>
+                            <p class="auth-footer"><a href="#" id="back-to-landing">Kargaha Geri Dön</a></p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="hidden">
+                <section class="dashboard">
+                    <div class="container">
+                        <header class="dash-header">
+                            <div>
+                                <h2 class="badge">GÖREV KONTROL MERKEZİ</h2>
+                                <h1>KOMUTA PANELİ</h1>
+                            </div>
+                            <button id="do-logout" class="btn-outline-sm">ÇIKIŞ YAP</button>
+                        </header>
+                        
+                        <div class="dash-grid">
+                            <!-- Stats -->
+                            <div class="stat-card glass">
+                                <h3>PROJE İLERLEMESİ</h3>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 75%"></div>
+                                </div>
+                                <span class="progress-text">%75 TAMAMLANDI</span>
+                            </div>
+
+                            <!-- Critical Tasks -->
+                            <div class="tasks-column">
+                                <h3 class="section-label">KRİTİK GÖREVLER</h3>
+                                <div id="critical-tasks-list">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Live Chat Widget -->
+        <div id="chat-widget" class="chat-widget">
+            <button id="chat-toggle" class="chat-toggle">
+                <span class="chat-icon">💬</span>
+                <span class="chat-badge">1</span>
+            </button>
+            <div id="chat-window" class="chat-window hidden">
+                <div class="chat-header">
+                    <div class="status-dot"></div>
+                    <div class="header-info">
+                        <h3>GameForge Destek</h3>
+                        <span>Şu an Aktif</span>
+                    </div>
+                    <button id="chat-close" class="chat-close">×</button>
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    <div class="msg bot">
+                        <div class="avatar">⚡</div>
+                        <div class="content">Komuta Merkezine hoş geldin. Bugün geliştirmelerine nasıl yardımcı olabilirim?</div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="Bir mesaj yazın...">
+                    <button id="send-msg">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
