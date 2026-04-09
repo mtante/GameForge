@@ -29,7 +29,12 @@ const saveState = () => {
     Store.set('tasks', state.tasks);
     Store.set('pendingActions', state.pendingActions);
     Store.set('activityLog', state.activityLog);
-    Store.set('currentUser', state.currentUser);
+    
+    if(window.sessionOnly) {
+        localStorage.removeItem('gameforge_currentUser'); // Do not persist
+    } else {
+        Store.set('currentUser', state.currentUser);
+    }
 
     // --- GOOGLE FIREBASE REALTIME DATABASE ---
     const sendToFirebase = () => {
@@ -267,6 +272,7 @@ document.getElementById('do-signup').addEventListener('click', () => {
 document.getElementById('do-login').addEventListener('click', () => {
     const userVal = document.getElementById('login-email').value.trim();
     const passVal = document.getElementById('login-pass').value.trim();
+    const rememberMe = document.getElementById('login-remember').checked;
     const btn = document.getElementById('do-login');
 
     const found = state.users.find(u => u.username === userVal && u.password === passVal);
@@ -278,6 +284,7 @@ document.getElementById('do-login').addEventListener('click', () => {
 
     setTimeout(() => {
         state.currentUser = found;
+        window.sessionOnly = !rememberMe;
         saveState();
         btn.innerText = 'OTURUMU BAŞLAT';
         btn.disabled = false;
@@ -505,7 +512,10 @@ const renderGeneral = () => {
     const totalTasks = state.tasks.length;
     let avgProgress = 0;
     if(totalTasks > 0) {
-        let totalProgressSum = state.tasks.reduce((sum, t) => sum + (parseInt(t.progress) || 0), 0);
+        let totalProgressSum = state.tasks.reduce((sum, t) => {
+            let pVal = typeof t.progress === 'string' ? t.progress.replace('%','') : t.progress;
+            return sum + (parseInt(pVal) || 0);
+        }, 0);
         avgProgress = Math.round(totalProgressSum / totalTasks);
     }
     const pBar = document.getElementById('general-progress-bar');
@@ -701,3 +711,14 @@ const handleSend = () => {
 
 document.getElementById('send-msg').addEventListener('click', handleSend);
 document.getElementById('user-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+
+// Auto-Login Boot Sequence
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if(state.currentUser && localStorage.getItem('gameforge_currentUser')) {
+            showView('dashboard');
+            updateAuthUI();
+            renderDashboard();
+        }
+    }, 800);
+});
