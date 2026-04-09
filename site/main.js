@@ -1,260 +1,358 @@
-// View Management
+// --- STATE & STORAGE ---
+const Store = {
+    get: (key, fallback) => JSON.parse(localStorage.getItem('gameforge_' + key)) || fallback,
+    set: (key, val) => localStorage.setItem('gameforge_' + key, JSON.stringify(val)),
+    clear: () => localStorage.clear()
+};
+
+let state = {
+    users: Store.get('users', [
+        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin' }
+    ]),
+    tasks: Store.get('tasks', [
+        { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
+        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' }
+    ]),
+    pendingActions: Store.get('pendingActions', []),
+    activityLog: Store.get('activityLog', []),
+    currentUser: Store.get('currentUser', null)
+};
+
+const saveState = () => {
+    Store.set('users', state.users);
+    Store.set('tasks', state.tasks);
+    Store.set('pendingActions', state.pendingActions);
+    Store.set('activityLog', state.activityLog);
+    Store.set('currentUser', state.currentUser);
+};
+
+// --- VIEW MANAGEMENT ---
 const views = {
     landing: document.getElementById('landing-view'),
     login: document.getElementById('login-view'),
+    signup: document.getElementById('signup-view'),
     dashboard: document.getElementById('dashboard-view')
 };
 
 const showView = (viewName) => {
-    Object.keys(views).forEach(key => {
-        views[key].classList.add('hidden');
-    });
+    Object.keys(views).forEach(key => views[key].classList.add('hidden'));
     views[viewName].classList.remove('hidden');
     window.scrollTo(0, 0);
 };
 
-// Navigation Listeners
-document.getElementById('nav-portal').addEventListener('click', (e) => {
-    e.preventDefault();
-    showView('login');
-});
-
-document.getElementById('hero-portal').addEventListener('click', (e) => {
-    e.preventDefault();
-    showView('login');
-});
-
-document.getElementById('back-to-landing').addEventListener('click', (e) => {
-    e.preventDefault();
-    showView('landing');
-});
-
-// Login Logic
-document.getElementById('do-login').addEventListener('click', () => {
-    const emailElem = document.getElementById('login-email');
-    const passElem = document.getElementById('login-pass');
-    const btnElem = document.getElementById('do-login');
-
-    if(emailElem.value !== 'admin' || passElem.value !== 'atss19') {
-        alert('Erişim Reddedildi: Geçersiz Komutan Kimliği veya Şifresi.');
-        return;
-    }
-
-    btnElem.innerText = 'DOĞRULANIYOR...';
-    btnElem.disabled = true;
-    emailElem.disabled = true;
-    passElem.disabled = true;
+// --- AUTH LOGIC ---
+const updateAuthUI = () => {
+    if(!state.currentUser) return;
+    const isMainAdmin = state.currentUser.role === 'admin';
+    document.getElementById('admin-tab').classList.toggle('hidden', !isMainAdmin);
+    document.getElementById('user-info-text').innerText = `Oturum Sahibi: ${state.currentUser.username} (${state.currentUser.dept})`;
     
-    // Simulate auth delay
+    // Approval badge
+    const badge = document.getElementById('approval-badge');
+    if(isMainAdmin && state.pendingActions.length > 0) {
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+};
+
+// Signup
+document.getElementById('do-signup').addEventListener('click', () => {
+    const user = document.getElementById('signup-user').value.trim();
+    const pass = document.getElementById('signup-pass').value.trim();
+    const dept = document.getElementById('signup-dept').value;
+
+    if(!user || !pass) return alert('Lütfen tüm alanları doldurun!');
+    if(state.users.find(u => u.username === user)) return alert('Bu kullanıcı adı zaten alınmış!');
+
+    const newUser = { username: user, password: pass, dept, role: 'staff' };
+    state.users.push(newUser);
+    
+    logActivity(user, 'Sisteme kayıt oldu.', 'info');
+    saveState();
+    alert('Kayıt Başarılı! Şimdi giriş yapabilirsiniz.');
+    showView('login');
+});
+
+// Login
+document.getElementById('do-login').addEventListener('click', () => {
+    const userVal = document.getElementById('login-email').value.trim();
+    const passVal = document.getElementById('login-pass').value.trim();
+    const btn = document.getElementById('do-login');
+
+    const found = state.users.find(u => u.username === userVal && u.password === passVal);
+
+    if(!found) return alert('Hatalı kullanıcı adı veya şifre!');
+
+    btn.innerText = 'DOĞRULANIYOR...';
+    btn.disabled = true;
+
     setTimeout(() => {
-        btnElem.innerText = 'OTURUMU BAŞLAT';
-        btnElem.disabled = false;
-        emailElem.disabled = false;
-        passElem.disabled = false;
-        emailElem.value = '';
-        passElem.value = '';
+        state.currentUser = found;
+        saveState();
+        btn.innerText = 'OTURUMU BAŞLAT';
+        btn.disabled = false;
         showView('dashboard');
-        renderTasks();
-    }, 1500);
+        updateAuthUI();
+        renderDashboard();
+    }, 1200);
 });
 
 document.getElementById('do-logout').addEventListener('click', () => {
+    state.currentUser = null;
+    saveState();
     showView('landing');
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-email').disabled = false;
-    document.getElementById('login-pass').disabled = false;
-    document.getElementById('do-login').disabled = false;
-    document.getElementById('do-login').innerText = 'OTURUMU BAŞLAT';
 });
 
-// Dashboard Logic
-let tasks = [
-    { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true },
-    { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true },
-    { id: 3, title: "Düşman yapay zeka sistemi", dept: "YAZILIM", status: "AKTİF", progress: "%20", done: false, critical: true },
-    { id: 4, title: "Ara sahne müzikleri", dept: "SES", status: "BEKLİYOR", progress: "%0", done: false, critical: false },
-    { id: 5, title: "Optimizasyon testleri", dept: "KALİTE GÜVENCE", status: "İNCELEME", progress: "%90", done: false, critical: false },
-    { id: 6, title: "Oyun içi satın alım arayüzü", dept: "TASARIM", status: "AKTİF", progress: "%60", done: false, critical: false }
-];
+// Navigation
+document.getElementById('nav-portal').addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
+document.getElementById('hero-portal').addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
+document.getElementById('go-to-signup').addEventListener('click', (e) => { e.preventDefault(); showView('signup'); });
+document.getElementById('go-to-login').addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
+document.getElementById('back-to-landing').addEventListener('click', (e) => { e.preventDefault(); showView('landing'); });
 
+// --- DASHBOARD LOGIC ---
 const departments = [
-    { name: "YAZILIM", emoji: "⚙️", count: 2, color: "var(--accent-cyan)", desc: "Oyun motoru, mekanikler ve yapay zeka." },
-    { name: "TASARIM", emoji: "🎨", count: 2, color: "var(--accent-purple)", desc: "Konsept, 3D modeller ve UI tasarımı." },
-    { name: "SES", emoji: "🎵", count: 1, color: "var(--accent-gold)", desc: "Müzik, efektler ve seslendirmeler." },
-    { name: "KALİTE GÜVENCE", emoji: "🛡️", count: 1, color: "var(--accent-pink)", desc: "Hata bulma ve performans." }
+    { name: "YAZILIM", emoji: "⚙️", color: "#00E5FF", desc: "Engine ve Mekanik" },
+    { name: "TASARIM", emoji: "🎨", color: "#8B5CFF", desc: "Visual ve UI" },
+    { name: "SES", emoji: "🎵", color: "#FFD700", desc: "Audio ve SFX" },
+    { name: "KALİTE GÜVENCE", emoji: "🛡️", color: "#FF2D78", desc: "Hata Ayıklama" },
+    { name: "ÜRETİM", emoji: "📋", color: "#00FF9D", desc: "Planlama" }
 ];
 
-// Tab Logic
+// Tabs
 document.querySelectorAll('.dash-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
-        // Toggle tabs
         document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
         e.target.classList.add('active');
         
-        // Show correct module
         const mod = e.target.getAttribute('data-mod');
         document.querySelectorAll('.dash-module').forEach(m => m.classList.add('hidden'));
-        document.querySelectorAll('.dash-module').forEach(m => m.classList.remove('active'));
-        
-        const activeMod = document.getElementById('mod-' + mod);
-        activeMod.classList.remove('hidden');
-        activeMod.classList.add('active');
-
-        // Update Title
-        document.getElementById('dash-title').innerText = e.target.innerText;
+        document.getElementById('mod-' + mod).classList.remove('hidden');
+        document.getElementById('mod-' + mod).classList.add('active');
+        document.getElementById('dash-title').innerText = e.target.innerText.split(' ')[0];
+        renderDashboard();
     });
 });
 
-window.toggleTask = (id) => {
-    const task = tasks.find(t => t.id === id);
-    if(task) {
-        task.done = !task.done;
-        task.status = task.done ? "TAMAMLANDI" : "AKTİF";
-        renderTasks();
+// Modals
+const modalTask = document.getElementById('task-modal');
+const modalReject = document.getElementById('reject-modal');
+
+document.getElementById('add-task-btn').addEventListener('click', () => modalTask.classList.remove('hidden'));
+document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => {
+    modalTask.classList.add('hidden');
+    modalReject.classList.add('hidden');
+}));
+
+// Action System (Pending)
+const requestAction = (type, data) => {
+    const action = {
+        id: Date.now(),
+        type,
+        data,
+        user: state.currentUser.username,
+        time: new Date().toLocaleTimeString()
+    };
+    
+    if(state.currentUser.role === 'admin') {
+        // Auto-approve if admin
+        processAction(action);
+    } else {
+        state.pendingActions.push(action);
+        logActivity(state.currentUser.username, `${type === 'ADD' ? 'Yeni görev ekleme' : 'İşlem'} onaya gönderildi.`, 'warn');
+        saveState();
+        alert('İşleminiz komutan onayına gönderildi.');
+    }
+    renderDashboard();
+    modalTask.classList.add('hidden');
+};
+
+const processAction = (action) => {
+    if(action.type === 'ADD') {
+        const newTask = { ...action.data, id: Date.now(), assignee: action.user, done: false, status: 'AKTİF', progress: '%0' };
+        state.tasks.push(newTask);
+        logActivity(action.user, `Yeni görev eklendi: ${newTask.title}`, 'success');
+    } else if(action.type === 'DELETE') {
+        state.tasks = state.tasks.filter(t => t.id !== action.data.id);
+        logActivity(action.user, `Görev silindi.`, 'danger');
+    } else if(action.type === 'COMPLETE') {
+        const task = state.tasks.find(t => t.id === action.data.id);
+        if(task) {
+            task.done = true;
+            task.status = 'TAMAMLANDI';
+            logActivity(action.user, `Görev tamamlandı: ${task.title}`, 'success');
+        }
+    }
+    saveState();
+};
+
+const logActivity = (user, message, type) => {
+    state.activityLog.unshift({ user, message, type, time: new Date().toLocaleTimeString() });
+    if(state.activityLog.length > 20) state.activityLog.pop();
+};
+
+// Admin Commands
+window.approveAction = (id) => {
+    const idx = state.pendingActions.findIndex(a => a.id === id);
+    if(idx > -1) {
+        const action = state.pendingActions[idx];
+        processAction(action);
+        state.pendingActions.splice(idx, 1);
+        saveState();
+        renderDashboard();
+        updateAuthUI();
     }
 };
 
-const renderTasks = () => {
-    const criticalList = document.getElementById('critical-tasks-list');
-    const allTasksList = document.getElementById('all-tasks-list');
-    const deptsList = document.getElementById('departments-list');
-
-    // Render Critical Tasks
-    const criticalHtml = tasks.filter(t => t.critical).map(task => `
-        <div class="task-item" style="cursor: pointer; border-color: ${task.done ? '#00FF9D' : 'rgba(255,255,255,0.05)'}; opacity: ${task.done ? '0.6' : '1'}; transition: all 0.3s;" onclick="toggleTask(${task.id})">
-            <div class="task-info">
-                <h4 style="text-decoration: ${task.done ? 'line-through' : 'none'}">${task.title}</h4>
-                <span class="task-dept">${task.dept}</span>
-            </div>
-            <div class="task-meta">
-                <span class="task-status" style="color: ${task.done ? '#00FF9D' : '#FF2D78'}">${task.done ? "TAMAM" : task.progress}</span>
-            </div>
-        </div>
-    `).join('');
-    criticalList.innerHTML = criticalHtml || '<p style="color:var(--text-secondary)">Kritik görev bulunmuyor.</p>';
-
-    // Render All Tasks
-    allTasksList.innerHTML = tasks.map(task => `
-        <div class="task-item" style="cursor: pointer; border-color: ${task.done ? '#00FF9D' : 'rgba(255,255,255,0.05)'}; opacity: ${task.done ? '0.6' : '1'}; transition: all 0.3s;" onclick="toggleTask(${task.id})">
-            <div class="task-info">
-                <h4 style="text-decoration: ${task.done ? 'line-through' : 'none'}">${task.title}</h4>
-                <span class="task-dept">${task.dept}</span>
-            </div>
-            <div class="task-meta">
-                <span class="task-status" style="color: ${task.done ? '#00FF9D' : 'var(--text-secondary)'}">${task.status}</span>
-            </div>
-        </div>
-    `).join('');
-
-    // Render Departments
-    deptsList.innerHTML = departments.map(d => {
-        // dynamic count
-        const activeCount = tasks.filter(t => t.dept === d.name && !t.done).length;
-        
-        return `
-        <div class="dept-card" style="border-top: 3px solid ${d.color}">
-            <div class="dept-card-header">
-                <span class="dept-icon">${d.emoji}</span>
-                <div class="dept-info">
-                    <h4 style="color: ${d.color}">${d.name}</h4>
-                    <p>${d.desc}</p>
-                </div>
-            </div>
-            <div class="dept-stats">
-                <div>
-                    <div class="dept-label">AKTİF GÖREV</div>
-                    <div class="dept-task-count" style="color: ${d.color}">${activeCount}</div>
-                </div>
-            </div>
-        </div>
-    `}).join('');
+let currentRejectId = null;
+window.openReject = (id) => {
+    currentRejectId = id;
+    modalReject.classList.remove('hidden');
 };
 
-// Loader Logic
+document.getElementById('confirm-reject').addEventListener('click', () => {
+    const reason = document.getElementById('reject-reason').value;
+    const idx = state.pendingActions.findIndex(a => a.id === currentRejectId);
+    if(idx > -1) {
+        const action = state.pendingActions[idx];
+        logActivity('ADMIN', `${action.user} kişisinin işlemi reddedildi: ${reason}`, 'danger');
+        state.pendingActions.splice(idx, 1);
+        saveState();
+        modalReject.classList.add('hidden');
+        renderDashboard();
+        updateAuthUI();
+    }
+});
+
+// Task Interactions
+window.handleTaskTitleClick = (id) => {
+    const task = state.tasks.find(t => t.id === id);
+    if(task && !task.done) {
+        requestAction('COMPLETE', { id });
+    }
+};
+
+window.deleteTaskUI = (id) => {
+    requestAction('DELETE', { id });
+};
+
+document.getElementById('save-task').addEventListener('click', () => {
+    const title = document.getElementById('task-title').value;
+    const dept = document.getElementById('task-dept').value;
+    const priority = document.getElementById('task-priority').value;
+    if(!title) return alert('Başlık boş olamaz!');
+    requestAction('ADD', { title, dept, priority, critical: priority === 'KRİTİK' });
+});
+
+// --- RENDERERS ---
+const renderDashboard = () => {
+    renderGeneral();
+    renderDepts();
+    renderAllTasks();
+    renderTeam();
+    renderAdmin();
+};
+
+const renderGeneral = () => {
+    const list = document.getElementById('critical-tasks-list');
+    const criticals = state.tasks.filter(t => t.critical && !t.done);
+    list.innerHTML = criticals.map(t => `
+        <div class="task-item">
+            <div class="task-info">
+                <h4>${t.title}</h4>
+                <span class="task-dept">${t.dept} (Sorumlu: ${t.assignee})</span>
+            </div>
+            <div class="task-meta">
+                <span class="task-status" style="color:#FF2D78">${t.progress}</span>
+            </div>
+        </div>
+    `).join('') || '<p>Kritik görev yok.</p>';
+};
+
+const renderDepts = () => {
+    const list = document.getElementById('departments-list');
+    list.innerHTML = departments.map(d => {
+        const count = state.tasks.filter(t => t.dept === d.name && !t.done).length;
+        return `
+            <div class="dept-card" style="border-top: 3px solid ${d.color}">
+                <div class="dept-card-header">
+                    <span class="dept-icon">${d.emoji}</span>
+                    <div class="dept-info"><h4>${d.name}</h4><p>${d.desc}</p></div>
+                </div>
+                <div class="dept-stats">
+                    <div><div class="dept-label">AKTİF</div><div style="color:${d.color}" class="dept-task-count">${count}</div></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+const renderAllTasks = () => {
+    const list = document.getElementById('all-tasks-list');
+    list.innerHTML = state.tasks.map(t => `
+        <div class="task-item" style="opacity: ${t.done ? 0.6 : 1}">
+            <div class="task-info" onclick="handleTaskTitleClick(${t.id})" style="cursor:pointer">
+                <h4 style="text-decoration: ${t.done ? 'line-through' : 'none'}">${t.title}</h4>
+                <span class="task-dept">${t.dept} | Sorumlu: ${t.assignee}</span>
+            </div>
+            <div class="task-meta" style="display:flex; align-items:center; gap:15px">
+                <span class="task-status" style="color: ${t.done ? '#00FF9D' : '#FF2D78'}">${t.status}</span>
+                <button onclick="deleteTaskUI(${t.id})" style="background:none; border:none; color:#FF2D78; cursor:pointer; font-size:18px">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+};
+
+const renderTeam = () => {
+    const list = document.getElementById('team-list');
+    list.innerHTML = state.users.map(u => `
+        <div class="user-card glass">
+            <div class="user-avatar">${u.username[0].toUpperCase()}</div>
+            <h4 style="color:var(--accent-cyan)">${u.username}</h4>
+            <p style="font-size:10px; color:var(--text-secondary)">${u.dept}</p>
+            <p style="font-size:11px; margin-top:5px">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
+        </div>
+    `).join('');
+
+    const logList = document.getElementById('activity-log');
+    logList.innerHTML = state.activityLog.map(l => `
+        <div class="log-item">
+            <span><strong>${l.user}:</strong> ${l.message}</span>
+            <span class="log-time">${l.time}</span>
+        </div>
+    `).join('');
+};
+
+const renderAdmin = () => {
+    const list = document.getElementById('pending-actions-list');
+    list.innerHTML = state.pendingActions.map(a => `
+        <div class="task-item glass">
+            <div class="task-info">
+                <span class="pending-badge">${a.type} İSTEĞİ</span>
+                <h4>${a.type === 'ADD' ? a.data.title : 'Görev ID: ' + a.data.id}</h4>
+                <p style="font-size:12px; color:var(--text-secondary)">Talep Eden: ${a.user} | Saat: ${a.time}</p>
+            </div>
+            <div class="action-btns">
+                <button class="btn-approve" onclick="approveAction(${a.id})">ONAYLA</button>
+                <button class="btn-reject" onclick="openReject(${a.id})">REDDET</button>
+            </div>
+        </div>
+    `).join('') || '<p>Bekleyen bir onay bekleyen işlem bulunmuyor.</p>';
+};
+
+// --- OTHERS ---
 window.addEventListener('load', () => {
     const loader = document.getElementById('loader');
-    setTimeout(() => {
-        loader.classList.add('fade-out');
-    }, 1500);
-});
-
-// Chat Widget Logic
-const chatToggle = document.getElementById('chat-toggle');
-const chatClose = document.getElementById('chat-close');
-const chatWindow = document.getElementById('chat-window');
-const chatMessages = document.getElementById('chat-messages');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-msg');
-const chatBadge = document.querySelector('.chat-badge');
-
-chatToggle.addEventListener('click', () => {
-    chatWindow.classList.toggle('hidden');
-    chatBadge.style.display = 'none';
-});
-
-chatClose.addEventListener('click', () => {
-    chatWindow.classList.add('hidden');
-});
-
-const addMessage = (text, sender) => {
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('msg', sender);
-    
-    const avatar = sender === 'bot' ? '⚡' : '👤';
-    
-    msgDiv.innerHTML = `
-        <div class="avatar">${avatar}</div>
-        <div class="content">${text}</div>
-    `;
-    
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-};
-
-const handleSend = () => {
-    const text = userInput.value.trim();
-    if (text) {
-        addMessage(text, 'user');
-        userInput.value = '';
-        
-        // Mock simulated response
-        setTimeout(() => {
-            const responses = [
-                "Mesajını geliştirici ekibine ilettim. Lütfen beklemede kal.",
-                "Görev parametreleri güncellendi. İnceliyoruz.",
-                "Proje istihbarat verilerine erişiliyor... lütfen bekle.",
-                "Forge şu anda %95 verimlilikte çalışıyor. Tüm sistemler yeşil."
-            ];
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            addMessage(randomResponse, 'bot');
-        }, 1000);
+    if(loader) setTimeout(() => loader.classList.add('fade-out'), 1000);
+    if(state.currentUser) {
+        showView('dashboard');
+        updateAuthUI();
+        renderDashboard();
     }
-};
-
-sendBtn.addEventListener('click', handleSend);
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleSend();
 });
 
-// Smooth Scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
-    });
-});
-
-// Initial greeting after 3 seconds
-setTimeout(() => {
-    if (chatWindow.classList.contains('hidden')) {
-        chatBadge.style.display = 'flex';
-    }
-}, 3000);
-
-// Particles JS Initialization
+// Particles & Chat logic preserved
 if(window.particlesJS) {
     particlesJS('particles-js', {
       "particles": {
@@ -274,3 +372,39 @@ if(window.particlesJS) {
       "retina_detect": true
     });
 }
+
+// Chat Widget
+const chatToggle = document.getElementById('chat-toggle');
+if(chatToggle) {
+    chatToggle.addEventListener('click', () => {
+        document.getElementById('chat-window').classList.toggle('hidden');
+        document.querySelector('.chat-badge').style.display = 'none';
+    });
+}
+document.getElementById('chat-close').addEventListener('click', () => document.getElementById('chat-window').classList.add('hidden'));
+
+const addMessage = (text, sender) => {
+    const chatMessages = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('msg', sender);
+    const avatar = sender === 'bot' ? '⚡' : '👤';
+    msgDiv.innerHTML = `<div class="avatar">${avatar}</div><div class="content">${text}</div>`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+};
+
+const handleSend = () => {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if (text) {
+        addMessage(text, 'user');
+        input.value = '';
+        setTimeout(() => {
+            const responses = ["Mesajını aldım.", "Veriler güncelleniyor.", "Sistem %100 kapasiteyle çalışıyor."];
+            addMessage(responses[Math.floor(Math.random() * responses.length)], 'bot');
+        }, 800);
+    }
+};
+
+document.getElementById('send-msg').addEventListener('click', handleSend);
+document.getElementById('user-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });

@@ -98,7 +98,7 @@
                         </div>
                         <div class="auth-body">
                             <div class="input-group">
-                                <label>KOMUTAN E-POSTA / KİMLİĞİ</label>
+                                <label>KULLANICI ADI</label>
                                 <input type="text" id="login-email" placeholder="admin">
                             </div>
                             <div class="input-group">
@@ -106,7 +106,42 @@
                                 <input type="password" id="login-pass" placeholder="••••••••">
                             </div>
                             <button id="do-login" class="btn-glow full-width">OTURUMU BAŞLAT</button>
-                            <p class="auth-footer"><a href="#" id="back-to-landing">Kargaha Geri Dön</a></p>
+                            <p class="auth-footer">Hesabınız yok mu? <a href="#" id="go-to-signup">Kayıt Ol</a></p>
+                            <p class="auth-footer"><a href="#" id="back-to-landing">Karargaha Geri Dön</a></p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="signup-view" class="hidden">
+                <section class="auth-section">
+                    <div class="auth-card glass">
+                        <div class="auth-header">
+                            <div class="auth-logo">🚀</div>
+                            <h2>YENİ KAYIT</h2>
+                            <p>Ekibe Katılın ve Göreve Başlayın</p>
+                        </div>
+                        <div class="auth-body">
+                            <div class="input-group">
+                                <label>KULLANICI ADI</label>
+                                <input type="text" id="signup-user" placeholder="Kullanıcı Adı">
+                            </div>
+                            <div class="input-group">
+                                <label>ŞİFRE</label>
+                                <input type="password" id="signup-pass" placeholder="••••••••">
+                            </div>
+                            <div class="input-group">
+                                <label>DEPARTMAN</label>
+                                <select id="signup-dept" class="neon-select">
+                                    <option value="YAZILIM">YAZILIM</option>
+                                    <option value="TASARIM">TASARIM</option>
+                                    <option value="SES">SES</option>
+                                    <option value="KALİTE GÜVENCE">KALİTE GÜVENCE</option>
+                                    <option value="ÜRETİM">ÜRETİM</option>
+                                </select>
+                            </div>
+                            <button id="do-signup" class="btn-glow full-width">HESAP OLUŞTUR</button>
+                            <p class="auth-footer">Zaten hesabınız var mı? <a href="#" id="go-to-login">Giriş Yap</a></p>
                         </div>
                     </div>
                 </section>
@@ -129,7 +164,14 @@
                             <button class="dash-tab active" data-mod="general">GENEL DURUM</button>
                             <button class="dash-tab" data-mod="depts">DEPARTMANLAR</button>
                             <button class="dash-tab" data-mod="tasks">TÜM GÖREVLER</button>
+                            <button class="dash-tab" data-mod="team">EKİP MERKEZİ</button>
+                            <button class="dash-tab hidden" id="admin-tab" data-mod="admin">ONAYLAR <span id="approval-badge" class="badge-dot hidden"></span></button>
                         </nav>
+                        
+                        <div id="user-welcome" class="user-welcome-bar">
+                            <span id="user-info-text">Bağlanılıyor...</span>
+                            <button id="add-task-btn" class="btn-glow-sm">+ YENİ GÖREV EKLE</button>
+                        </div>
                         
                         <div id="mod-general" class="dash-module active">
                             <div class="dash-grid">
@@ -165,10 +207,83 @@
                                 <!-- Dynamic content -->
                             </div>
                         </div>
+
+                        <div id="mod-team" class="dash-module hidden">
+                            <h3 class="section-label">EKİP ANALİZİ</h3>
+                            <div id="team-list" class="team-grid">
+                                <!-- Dynamic content -->
+                            </div>
+                            <h3 class="section-label" style="margin-top: 40px;">SON AKTİVİTELER</h3>
+                            <div id="activity-log" class="activity-log glass">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+
+                        <div id="mod-admin" class="dash-module hidden">
+                            <h3 class="section-label">YÖNETİCİ ONAY PANELİ</h3>
+                            <p class="section-desc">Personel tarafından iletilen görev değişiklikleri sizin onayınızı bekliyor.</p>
+                            <div id="pending-actions-list" class="tasks-column">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
         </main>
+
+        <!-- Modals -->
+        <div id="task-modal" class="modal-overlay hidden">
+            <div class="modal-card glass">
+                <div class="modal-header">
+                    <h3>YENİ GÖREV OLUŞTUR</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label>GÖREV BAŞLIĞI</label>
+                        <input type="text" id="task-title" placeholder="Görevi tanımlayın...">
+                    </div>
+                    <div class="input-group">
+                        <label>DEPARTMAN</label>
+                        <select id="task-dept" class="neon-select">
+                            <option value="YAZILIM">YAZILIM</option>
+                            <option value="TASARIM">TASARIM</option>
+                            <option value="SES">SES</option>
+                            <option value="KALİTE GÜVENCE">KALİTE GÜVENCE</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>ÖNCELİK</label>
+                        <select id="task-priority" class="neon-select">
+                            <option value="NORMAL">NORMAL</option>
+                            <option value="YÜKSEK">YÜKSEK</option>
+                            <option value="KRİTİK">KRİTİK</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="save-task" class="btn-glow full-width">ONAYA GÖNDER</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reject-modal" class="modal-overlay hidden">
+            <div class="modal-card glass">
+                <div class="modal-header">
+                    <h3>İŞLEMİ REDDET</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label>REDDE ETME SEBEBİ</label>
+                        <textarea id="reject-reason" class="neon-textarea" placeholder="Neden reddettiğinizi kısaca açıklayın..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="confirm-reject" class="btn-outline red full-width">REDDİ ONAYLA</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Live Chat Widget -->
         <div id="chat-widget" class="chat-widget">
