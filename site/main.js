@@ -7,11 +7,15 @@ const Store = {
 
 let state = {
     users: Store.get('users', [
-        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() }
+        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() },
+        { username: 'Mehmet_Dev', password: '123', dept: 'YAZILIM', role: 'staff', lastSeen: Date.now() - 1000000 },
+        { username: 'Ayşe_Art', password: '123', dept: 'TASARIM', role: 'staff', lastSeen: Date.now() - 50000 },
+        { username: 'Can_Sound', password: '123', dept: 'SES', role: 'staff', lastSeen: Date.now() }
     ]),
     tasks: Store.get('tasks', [
         { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
-        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' }
+        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' },
+        { id: 3, title: "UI Ses efektleri", dept: "SES", status: "AKTİF", progress: "%10", done: false, critical: false, assignee: 'Can_Sound' }
     ]),
     pendingActions: Store.get('pendingActions', []),
     activityLog: Store.get('activityLog', []),
@@ -388,13 +392,16 @@ const renderAllTasks = () => {
     const list = document.getElementById('all-tasks-list');
     list.innerHTML = state.tasks.map(t => `
         <div class="task-item" style="opacity: ${t.done ? 0.6 : 1}">
-            <div class="task-info" onclick="handleTaskTitleClick(${t.id})" style="cursor:pointer">
+            <div class="task-info">
                 <h4 style="text-decoration: ${t.done ? 'line-through' : 'none'}">${t.title}</h4>
                 <span class="task-dept">${t.dept} | Sorumlu: ${t.assignee}</span>
             </div>
-            <div class="task-meta" style="display:flex; align-items:center; gap:15px">
+            <div class="task-meta" style="display:flex; align-items:center; gap:12px">
                 <span class="task-status" style="color: ${t.done ? '#00FF9D' : '#FF2D78'}">${t.status}</span>
-                <button onclick="deleteTaskUI(${t.id})" style="background:none; border:none; color:#FF2D78; cursor:pointer; font-size:18px">🗑️</button>
+                <div style="display:flex; gap:8px">
+                    ${!t.done ? `<button onclick="requestAction('COMPLETE', { id: ${t.id} })" title="Bitir" style="background:#00FF9D; border:none; color:#09090F; cursor:pointer; font-size:14px; width:28px; height:28px; border-radius:6px; font-weight:bold">✔</button>` : ''}
+                    <button onclick="deleteTaskUI(${t.id})" title="Sil" style="background:rgba(255,45,120,0.1); border:1px solid #FF2D78; color:#FF2D78; cursor:pointer; font-size:14px; width:28px; height:28px; border-radius:6px">🗑️</button>
+                </div>
             </div>
         </div>
     `).join('');
@@ -402,19 +409,32 @@ const renderAllTasks = () => {
 
 const renderAdmin = () => {
     const list = document.getElementById('pending-actions-list');
-    list.innerHTML = state.pendingActions.map(a => `
-        <div class="task-item glass">
-            <div class="task-info">
-                <span class="pending-badge">${a.type} İSTEĞİ</span>
-                <h4>${a.type === 'ADD' ? a.data.title : 'Görev ID: ' + a.data.id}</h4>
-                <p style="font-size:12px; color:var(--text-secondary)">Talep Eden: ${a.user} | Saat: ${a.time}</p>
+    list.innerHTML = state.pendingActions.map(a => {
+        let details = '';
+        if(a.type === 'ADD') details = `<strong>YENİ GÖREV:</strong> ${a.data.title}`;
+        if(a.type === 'COMPLETE') {
+            const task = state.tasks.find(t => t.id === a.data.id);
+            details = `<strong>GÖREV BİTİRME:</strong> ${task ? task.title : 'Bilinmeyen Görev'}`;
+        }
+        if(a.type === 'DELETE') {
+            const task = state.tasks.find(t => t.id === a.data.id);
+            details = `<strong>GÖREV SİLME:</strong> ${task ? task.title : 'Bilinmeyen Görev'}`;
+        }
+
+        return `
+            <div class="task-item glass">
+                <div class="task-info">
+                    <span class="pending-badge">${a.type} TALEBİ</span>
+                    <h4 style="margin-top:5px">${details}</h4>
+                    <p style="font-size:12px; color:var(--text-secondary)">Talep Eden: ${a.user} | Saat: ${a.time}</p>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-approve" onclick="approveAction(${a.id})">ONAYLA</button>
+                    <button class="btn-reject" onclick="openReject(${a.id})">REDDET</button>
+                </div>
             </div>
-            <div class="action-btns">
-                <button class="btn-approve" onclick="approveAction(${a.id})">ONAYLA</button>
-                <button class="btn-reject" onclick="openReject(${a.id})">REDDET</button>
-            </div>
-        </div>
-    `).join('') || '<p>Bekleyen bir onay bekleyen işlem bulunmuyor.</p>';
+        `;
+    }).join('') || '<p style="color:var(--text-secondary); text-align:center; padding:20px;">Şu an bekleyen bir komuta talebi bulunmuyor.</p>';
 };
 
 // --- OTHERS ---
