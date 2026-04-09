@@ -31,58 +31,94 @@ const saveState = () => {
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
 
-    // Sync to Cloud if enabled
+    // --- GRANULAR CLOUD SYNC (GUN.JS) ---
     if(window.isCloudActive) {
-        window.cloud.get('gameforge_data').put({
-            users: JSON.stringify(state.users),
-            tasks: JSON.stringify(state.tasks),
-            pendingActions: JSON.stringify(state.pendingActions),
-            activityLog: JSON.stringify(state.activityLog)
+        // Sync Users individually
+        state.users.forEach(u => {
+            window.cloud.get('gf_users').get(u.username).put(u);
         });
+        // Sync Tasks individually
+        state.tasks.forEach(t => {
+            window.cloud.get('gf_tasks').get(t.id).put(t);
+        });
+        // Sync Pending Actions individually
+        state.pendingActions.forEach(a => {
+            // Stringify nested data for Gun nodes if necessary, but Gun handles flat objects well.
+            // Since data might be an object, we stringify it to be safe.
+            window.cloud.get('gf_actions').get(a.id).put({
+                ...a,
+                data: JSON.stringify(a.data)
+            });
+        });
+        // Activity Log (Last 20)
+        window.cloud.get('gf_log').put({ items: JSON.stringify(state.activityLog) });
     }
 };
 
-// --- ZERO-CONFIG DECENTRALIZED SYNC (GUN.JS) ---
+// --- ROBUST CLOUD INTEGRATION ---
 window.isCloudActive = false;
 try {
-    // Initializing with public relays - NO KEYS REQUIRED
     window.cloud = Gun([
         'https://gun-manhattan.herokuapp.com/gun',
-        'https://relay.peer.ooo/gun'
+        'https://relay.peer.ooo/gun',
+        'https://gunjs.herokuapp.com/gun'
     ]);
     window.isCloudActive = true;
 
     const statusBadge = document.getElementById('server-status');
     if(statusBadge) {
         statusBadge.innerText = "CLOUD SYNC: ACTIVE";
-        statusBadge.classList.remove('offline');
-        statusBadge.classList.add('online');
+        statusBadge.classList.replace('offline', 'online');
     }
 
-    // Listener for cloud updates
-    window.cloud.get('gameforge_data').on((data) => {
-        if(data) {
-            // Merge carefully to avoid loops
-            const cloudUsers = data.users ? JSON.parse(data.users) : null;
-            const cloudTasks = data.tasks ? JSON.parse(data.tasks) : null;
-            const cloudActions = data.pendingActions ? JSON.parse(data.pendingActions) : null;
-            const cloudLog = data.activityLog ? JSON.parse(data.activityLog) : null;
+    // LISTENER: Users
+    window.cloud.get('gf_users').map().on((u, username) => {
+        if(!u) return;
+        const idx = state.users.findIndex(user => user.username === username);
+        if(idx === -1) {
+            state.users.push(u);
+        } else {
+            state.users[idx] = { ...state.users[idx], ...u };
+        }
+        if(!views.dashboard.classList.contains('hidden')) renderTeam();
+    });
 
-            if (cloudUsers) state.users = cloudUsers;
-            if (cloudTasks) state.tasks = cloudTasks;
-            if (cloudActions) state.pendingActions = cloudActions;
-            if (cloudLog) state.activityLog = cloudLog;
+    // LISTENER: Tasks
+    window.cloud.get('gf_tasks').map().on((t, id) => {
+        if(!t) return;
+        const idx = state.tasks.findIndex(task => task.id == id);
+        if(idx === -1) {
+            state.tasks.push(t);
+        } else {
+            state.tasks[idx] = { ...state.tasks[idx], ...t };
+        }
+        if(!views.dashboard.classList.contains('hidden')) renderDashboard();
+    });
 
-            if(!views.dashboard.classList.contains('hidden')) {
-                renderDashboard();
-                updateAuthUI();
-            }
+    // LISTENER: Actions
+    window.cloud.get('gf_actions').map().on((a, id) => {
+        if(!a) return;
+        const idx = state.pendingActions.findIndex(action => action.id == id);
+        const parsedAction = { ...a, data: a.data ? JSON.parse(a.data) : null };
+        if(idx === -1) {
+            state.pendingActions.push(parsedAction);
+        } else {
+            state.pendingActions[idx] = parsedAction;
+        }
+        if(!views.dashboard.classList.contains('hidden')) renderAdmin();
+    });
+
+    // LISTENER: Logs
+    window.cloud.get('gf_log').on((data) => {
+        if(data && data.items) {
+            state.activityLog = JSON.parse(data.items);
+            if(!views.dashboard.classList.contains('hidden')) renderTeam();
         }
     });
 
-    console.log("GameForge Cloud: Decentralized Sync Active (No Config Needed)");
+    console.log("GameForge Cloud: Robust Granular Sync Initialized.");
 } catch(e) {
-    console.error("Cloud Sync Hatası:", e);
+    console.error("Cloud Sync Error:", e);
 }
 
 // Pulse to keep session alive and update online status
