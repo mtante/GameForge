@@ -1065,10 +1065,7 @@ h1, h2, h3, .logo {
 
 /* Utilities */
 .hidden { display: none !important; }
-    font-size: 14px;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-}
+
 
 .progress-container {
     height: 12px;
