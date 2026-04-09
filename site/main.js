@@ -7,15 +7,11 @@ const Store = {
 
 let state = {
     users: Store.get('users', [
-        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() },
-        { username: 'Mehmet_Dev', password: '123', dept: 'YAZILIM', role: 'staff', lastSeen: Date.now() - 1000000 },
-        { username: 'Ayşe_Art', password: '123', dept: 'TASARIM', role: 'staff', lastSeen: Date.now() - 50000 },
-        { username: 'Can_Sound', password: '123', dept: 'SES', role: 'staff', lastSeen: Date.now() }
+        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() }
     ]),
     tasks: Store.get('tasks', [
         { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
-        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' },
-        { id: 3, title: "UI Ses efektleri", dept: "SES", status: "AKTİF", progress: "%10", done: false, critical: false, assignee: 'Can_Sound' }
+        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' }
     ]),
     pendingActions: Store.get('pendingActions', []),
     activityLog: Store.get('activityLog', []),
