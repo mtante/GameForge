@@ -31,123 +31,83 @@ const saveState = () => {
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
 
-    // --- LIVE REST DATABASE (JSONBLOB) ---
-    const DB_URL = "https://jsonblob.com/api/jsonBlob/019d73bb-0d0a-7630-ba13-0d5cb6a58d64";
-    window.isCloudActive = true;
-    
-    // Non-blocking background push
-    fetch(DB_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-            users: state.users,
-            tasks: state.tasks,
-            pendingActions: state.pendingActions,
-            activityLog: state.activityLog
-        })
-    }).catch(e => console.error("Cloud push failed:", e));
+    // --- GOOGLE FIREBASE REALTIME DATABASE ---
+    const sendToFirebase = () => {
+        if(window.isFirebaseActive) {
+            window.db.ref('gameforge').set({
+                users: state.users,
+                tasks: state.tasks,
+                pendingActions: state.pendingActions,
+                activityLog: state.activityLog
+            }).catch(e => console.error("Firebase kayıt hatası:", e));
+        }
+    };
+    sendToFirebase();
 };
 
-// --- ROBUST LIVE SYNC ENGINE ---
-window.isCloudActive = true;
-const DB_URL = "https://jsonblob.com/api/jsonBlob/019d73bb-0d0a-7630-ba13-0d5cb6a58d64";
-let isPolling = false;
+// --- FIREBASE KURULUMU (SERVER) ---
+// DİKKAT: Firebase'in çalışması için Google Firebase'den aldığın ayarları aşağıya yapıştır!
+const firebaseConfig = {
+    apiKey: "BURAYA_API_KEY_YAZIN",
+    authDomain: "PROJE_ID.firebaseapp.com",
+    databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
+    projectId: "PROJE_ID",
+    storageBucket: "PROJE_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+};
 
-const pollCloud = async () => {
-    if(isPolling) return;
-    isPolling = true;
+window.isFirebaseActive = false;
+
+if(firebaseConfig.apiKey !== "BURAYA_API_KEY_YAZIN") {
     try {
-        const res = await fetch(DB_URL, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        const cloudData = await res.json();
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.database();
+        window.isFirebaseActive = true;
         
-        let hasChanges = false;
-
-        // Merge logic based on timestamps/lengths
-        if(cloudData.users) {
-            cloudData.users.forEach(cu => {
-                const idx = state.users.findIndex(u => u.username === cu.username);
-                if(idx === -1) {
-                    state.users.push(cu); hasChanges = true;
-                } else if ((cu.updatedAt || 0) > (state.users[idx].updatedAt || 0)) {
-                    state.users[idx] = cu; hasChanges = true;
-                }
-            });
-            // Handle deletions (if it's not in cloud anymore but is local)
-            state.users = state.users.filter(u => {
-                if(!cloudData.users.find(c => c.username === u.username)) {
-                    hasChanges = true; return false;
-                }
-                return true;
-            });
-        }
-
-        if(cloudData.tasks) {
-            cloudData.tasks.forEach(ct => {
-                const idx = state.tasks.findIndex(t => t.id === ct.id);
-                if(idx === -1) {
-                    state.tasks.push(ct); hasChanges = true;
-                } else if ((ct.updatedAt || 0) > (state.tasks[idx].updatedAt || 0)) {
-                    state.tasks[idx] = ct; hasChanges = true;
-                }
-            });
-            // Handle deletions
-            state.tasks = state.tasks.filter(t => {
-                if(!cloudData.tasks.find(c => c.id === t.id)) {
-                    hasChanges = true; return false;
-                }
-                return true;
-            });
-        }
-
-        if(cloudData.pendingActions) {
-            cloudData.pendingActions.forEach(ca => {
-                const idx = state.pendingActions.findIndex(a => a.id === ca.id);
-                if(idx === -1) {
-                    state.pendingActions.push(ca); hasChanges = true;
-                } else if ((ca.updatedAt || 0) > (state.pendingActions[idx].updatedAt || 0)) {
-                    state.pendingActions[idx] = ca; hasChanges = true;
-                }
-            });
-            state.pendingActions = state.pendingActions.filter(a => {
-                if(!cloudData.pendingActions.find(c => c.id === a.id)) return false;
-                return true;
-            });
-        }
-
-        if(cloudData.activityLog && cloudData.activityLog.length > state.activityLog.length) {
-            state.activityLog = cloudData.activityLog;
-            hasChanges = true;
-        }
-
-        if(hasChanges) {
-            Store.set('users', state.users);
-            Store.set('tasks', state.tasks);
-            Store.set('pendingActions', state.pendingActions);
-            Store.set('activityLog', state.activityLog);
-            if(!views.dashboard.classList.contains('hidden')) {
-                renderDashboard();
-            }
-        }
-
         const statusBadge = document.getElementById('server-status');
         if(statusBadge) {
-            statusBadge.innerText = "LIVE SERVER: ACTIVE";
+            statusBadge.innerText = "FIREBASE: BAĞLI";
             statusBadge.classList.replace('offline', 'online');
         }
-    } catch(e) {
-        console.warn("Pull timeout, retrying...");
-    }
-    isPolling = false;
-};
 
-console.log("GameForge Server: REST API Active.");
-// Initial pull & Push local state
-pollCloud().then(() => saveState());
-// Poll every 3 seconds for near-real-time updates
-setInterval(pollCloud, 3000);
+        // Real-time "Canlı İzleme" Listener
+        window.db.ref('gameforge').on('value', (snapshot) => {
+            const cloudData = snapshot.val();
+            if(cloudData) {
+                // Verileri sadece yenisi varsa birleştirerek veya direkt alarak aktar
+                state.users = cloudData.users || state.users;
+                state.tasks = cloudData.tasks || state.tasks;
+                state.pendingActions = cloudData.pendingActions || state.pendingActions;
+                state.activityLog = cloudData.activityLog || state.activityLog;
+                
+                Store.set('users', state.users);
+                Store.set('tasks', state.tasks);
+                Store.set('pendingActions', state.pendingActions);
+                Store.set('activityLog', state.activityLog);
+
+                if(!views.dashboard.classList.contains('hidden')) {
+                    renderDashboard();
+                }
+            }
+        });
+
+        console.log("GameForge Server: Firebase Real-time DB Bağlandı!");
+    } catch(e) {
+        console.error("Firebase Kurulum Hatası:", e);
+    }
+} else {
+    // Sadece yerel mod uyarısı
+    const statusBadge = document.getElementById('server-status');
+    if(statusBadge) {
+        statusBadge.innerText = "SERVER KAPALI (KEY EKSİK)";
+        statusBadge.classList.replace('online', 'offline');
+    }
+    console.warn("UYARI: Firebase Key girilmediği için sistem sadece kendi hafızasında çalışıyor.");
+    setTimeout(() => {
+        showNotice('warn', 'Firebase API ayarlarınızı main.js içine eklemelisiniz!');
+    }, 2000);
+}
 
 // Pulse to keep session alive and update online status
 setInterval(() => {
