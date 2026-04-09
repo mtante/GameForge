@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  <script type="module" crossorigin src="/GameForge/assets/index-qNE5Oy5x.js"></script>
-  <link rel="stylesheet" crossorigin href="/GameForge/assets/index-B8cID3gN.css">
+  <script type="module" crossorigin src="/GameForge/assets/index-B2aRWhLy.js"></script>
+  <link rel="stylesheet" crossorigin href="/GameForge/assets/index-QQxE8r61.css">
 </head>
 <body>
     <div id="particles-js"></div>
@@ -127,9 +127,12 @@
                                 <label>KULLANICI ADI</label>
                                 <input type="text" id="signup-user" placeholder="Kullanıcı Adı">
                             </div>
-                            <div class="input-group">
+                            <div class="form-group">
                                 <label>ŞİFRE</label>
-                                <input type="password" id="signup-pass" placeholder="••••••••">
+                                <div style="position:relative">
+                                    <input type="password" id="signup-pass" placeholder="••••••••">
+                                    <button type="button" onclick="togglePassword('signup-pass')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-secondary); cursor:pointer">👁️</button>
+                                </div>
                             </div>
                             <div class="input-group">
                                 <label>DEPARTMAN</label>
@@ -330,6 +333,9 @@
             </div>
         </div>
     </div>
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- Gun.js (Decentralized Zero-Config Sync) -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 </body>

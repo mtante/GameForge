@@ -126,9 +126,12 @@
                                 <label>KULLANICI ADI</label>
                                 <input type="text" id="signup-user" placeholder="Kullanıcı Adı">
                             </div>
-                            <div class="input-group">
+                            <div class="form-group">
                                 <label>ŞİFRE</label>
-                                <input type="password" id="signup-pass" placeholder="••••••••">
+                                <div style="position:relative">
+                                    <input type="password" id="signup-pass" placeholder="••••••••">
+                                    <button type="button" onclick="togglePassword('signup-pass')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-secondary); cursor:pointer">👁️</button>
+                                </div>
                             </div>
                             <div class="input-group">
                                 <label>DEPARTMAN</label>
@@ -329,6 +332,9 @@
             </div>
         </div>
     </div>
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- Gun.js (Decentralized Zero-Config Sync) -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script type="module" src="./main.js"></script>
