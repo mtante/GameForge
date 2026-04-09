@@ -57,22 +57,31 @@ document.getElementById('do-logout').addEventListener('click', () => {
 });
 
 // Dashboard Logic
-const tasks = [
-    { title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "%80" },
-    { title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "%40" },
-    { title: "Düşman yapay zeka sistemi", dept: "YAZILIM", status: "%20" }
+let tasks = [
+    { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "%80", done: false },
+    { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "%40", done: false },
+    { id: 3, title: "Düşman yapay zeka sistemi", dept: "YAZILIM", status: "%20", done: false }
 ];
+
+window.toggleTask = (id) => {
+    const task = tasks.find(t => t.id === id);
+    if(task) {
+        task.done = !task.done;
+        task.status = task.done ? "TAMAMLANDI" : "AKTİF";
+        renderTasks();
+    }
+};
 
 const renderTasks = () => {
     const list = document.getElementById('critical-tasks-list');
     list.innerHTML = tasks.map(task => `
-        <div class="task-item">
+        <div class="task-item" style="cursor: pointer; border-color: ${task.done ? '#00FF9D' : 'rgba(255,255,255,0.05)'}; opacity: ${task.done ? '0.6' : '1'}; transition: all 0.3s;" onclick="toggleTask(${task.id})">
             <div class="task-info">
-                <h4>${task.title}</h4>
+                <h4 style="text-decoration: ${task.done ? 'line-through' : 'none'}">${task.title}</h4>
                 <span class="task-dept">${task.dept}</span>
             </div>
             <div class="task-meta">
-                <span class="task-status">${task.status}</span>
+                <span class="task-status" style="color: ${task.done ? '#00FF9D' : '#FF2D78'}">${task.status}</span>
             </div>
         </div>
     `).join('');
