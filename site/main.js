@@ -31,22 +31,28 @@ document.getElementById('back-to-landing').addEventListener('click', (e) => {
 
 // Login Logic
 document.getElementById('do-login').addEventListener('click', () => {
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-pass').value;
-    const btn = document.getElementById('do-login');
+    const emailElem = document.getElementById('login-email');
+    const passElem = document.getElementById('login-pass');
+    const btnElem = document.getElementById('do-login');
 
-    if(email !== 'admin' || pass !== 'atss19') {
+    if(emailElem.value !== 'admin' || passElem.value !== 'atss19') {
         alert('Erişim Reddedildi: Geçersiz Komutan Kimliği veya Şifresi.');
         return;
     }
 
-    btn.innerText = 'BAŞLATILIYOR...';
-    btn.disabled = true;
+    btnElem.innerText = 'DOĞRULANIYOR...';
+    btnElem.disabled = true;
+    emailElem.disabled = true;
+    passElem.disabled = true;
     
     // Simulate auth delay
     setTimeout(() => {
-        btn.innerText = 'OTURUMU BAŞLAT';
-        btn.disabled = false;
+        btnElem.innerText = 'OTURUMU BAŞLAT';
+        btnElem.disabled = false;
+        emailElem.disabled = false;
+        passElem.disabled = false;
+        emailElem.value = '';
+        passElem.value = '';
         showView('dashboard');
         renderTasks();
     }, 1500);
@@ -54,6 +60,12 @@ document.getElementById('do-login').addEventListener('click', () => {
 
 document.getElementById('do-logout').addEventListener('click', () => {
     showView('landing');
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-email').disabled = false;
+    document.getElementById('login-pass').disabled = false;
+    document.getElementById('do-login').disabled = false;
+    document.getElementById('do-login').innerText = 'OTURUMU BAŞLAT';
 });
 
 // Dashboard Logic
