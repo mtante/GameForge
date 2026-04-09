@@ -31,39 +31,40 @@ const saveState = () => {
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
 
-    // --- GRANULAR CLOUD SYNC (GUN.JS) ---
+    // --- ROBUST CLOUD SYNC (GUN.JS) ---
     if(window.isCloudActive) {
-        // Sync Users individually
+        // Use a unique studio namespace to avoid clashes with other projects
+        const studioKey = 'GameForge_Professional_Studio_Primary_v2';
+        
         state.users.forEach(u => {
-            window.cloud.get('gf_users').get(u.username).put(u);
+            window.cloud.get(studioKey + '_users').get(u.username).put(u);
         });
-        // Sync Tasks individually
         state.tasks.forEach(t => {
-            window.cloud.get('gf_tasks').get(t.id).put(t);
+            window.cloud.get(studioKey + '_tasks').get(t.id).put(t);
         });
-        // Sync Pending Actions individually
         state.pendingActions.forEach(a => {
-            // Stringify nested data for Gun nodes if necessary, but Gun handles flat objects well.
-            // Since data might be an object, we stringify it to be safe.
-            window.cloud.get('gf_actions').get(a.id).put({
+            window.cloud.get(studioKey + '_actions').get(a.id).put({
                 ...a,
                 data: JSON.stringify(a.data)
             });
         });
-        // Activity Log (Last 20)
-        window.cloud.get('gf_log').put({ items: JSON.stringify(state.activityLog) });
+        window.cloud.get(studioKey + '_log').put({ items: JSON.stringify(state.activityLog) });
     }
 };
 
 // --- ROBUST CLOUD INTEGRATION ---
 window.isCloudActive = false;
 try {
+    // Using a more diverse set of redundant relays for global accessibility (PC & Mobile)
     window.cloud = Gun([
         'https://gun-manhattan.herokuapp.com/gun',
         'https://relay.peer.ooo/gun',
-        'https://gunjs.herokuapp.com/gun'
+        'https://gunjs.herokuapp.com/gun',
+        'https://gun-server.herokuapp.com/gun',
+        'https://dletta.herokuapp.com/gun'
     ]);
     window.isCloudActive = true;
+    const studioKey = 'GameForge_Professional_Studio_Primary_v2';
 
     const statusBadge = document.getElementById('server-status');
     if(statusBadge) {
@@ -72,7 +73,7 @@ try {
     }
 
     // LISTENER: Users
-    window.cloud.get('gf_users').map().on((u, username) => {
+    window.cloud.get(studioKey + '_users').map().on((u, username) => {
         if(!u) return;
         const idx = state.users.findIndex(user => user.username === username);
         if(idx === -1) {
@@ -84,7 +85,7 @@ try {
     });
 
     // LISTENER: Tasks
-    window.cloud.get('gf_tasks').map().on((t, id) => {
+    window.cloud.get(studioKey + '_tasks').map().on((t, id) => {
         if(!t) return;
         const idx = state.tasks.findIndex(task => task.id == id);
         if(idx === -1) {
@@ -96,7 +97,7 @@ try {
     });
 
     // LISTENER: Actions
-    window.cloud.get('gf_actions').map().on((a, id) => {
+    window.cloud.get(studioKey + '_actions').map().on((a, id) => {
         if(!a) return;
         const idx = state.pendingActions.findIndex(action => action.id == id);
         const parsedAction = { ...a, data: a.data ? JSON.parse(a.data) : null };
@@ -109,7 +110,7 @@ try {
     });
 
     // LISTENER: Logs
-    window.cloud.get('gf_log').on((data) => {
+    window.cloud.get(studioKey + '_log').on((data) => {
         if(data && data.items) {
             state.activityLog = JSON.parse(data.items);
             if(!views.dashboard.classList.contains('hidden')) renderTeam();
