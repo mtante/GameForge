@@ -7,11 +7,11 @@ const Store = {
 
 let state = {
     users: Store.get('users', [
-        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() }
+        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now(), updatedAt: Date.now() }
     ]).filter(u => !['Mehmet_Dev', 'Ayşe_Art', 'Can_Sound'].includes(u.username)),
     tasks: Store.get('tasks', [
-        { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
-        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' }
+        { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin', updatedAt: Date.now() },
+        { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin', updatedAt: Date.now() }
     ]),
     pendingActions: Store.get('pendingActions', []),
     activityLog: Store.get('activityLog', []),
@@ -33,38 +33,41 @@ const saveState = () => {
 
     // --- ROBUST CLOUD SYNC (GUN.JS) ---
     if(window.isCloudActive) {
-        // Use a unique studio namespace to avoid clashes with other projects
-        const studioKey = 'GameForge_Professional_Studio_Primary_v2';
+        const studioKey = 'GameForge_Pro_Global_v21';
+        const now = Date.now();
         
         state.users.forEach(u => {
-            window.cloud.get(studioKey + '_users').get(u.username).put(u);
+            window.cloud.get(studioKey + '_users').get(u.username).put({ ...u, updatedAt: now });
         });
         state.tasks.forEach(t => {
-            window.cloud.get(studioKey + '_tasks').get(t.id).put(t);
+            window.cloud.get(studioKey + '_tasks').get(t.id).put({ ...t, updatedAt: now });
         });
         state.pendingActions.forEach(a => {
             window.cloud.get(studioKey + '_actions').get(a.id).put({
                 ...a,
-                data: JSON.stringify(a.data)
+                data: JSON.stringify(a.data),
+                updatedAt: now
             });
         });
-        window.cloud.get(studioKey + '_log').put({ items: JSON.stringify(state.activityLog) });
+        window.cloud.get(studioKey + '_log').put({ items: JSON.stringify(state.activityLog), updatedAt: now });
     }
 };
 
 // --- ROBUST CLOUD INTEGRATION ---
 window.isCloudActive = false;
 try {
-    // Using a more diverse set of redundant relays for global accessibility (PC & Mobile)
+    // Extensive list of redundant public relays for high reliability across all devices
     window.cloud = Gun([
         'https://gun-manhattan.herokuapp.com/gun',
         'https://relay.peer.ooo/gun',
         'https://gunjs.herokuapp.com/gun',
         'https://gun-server.herokuapp.com/gun',
-        'https://dletta.herokuapp.com/gun'
+        'https://dletta.herokuapp.com/gun',
+        'https://gun-us.herokuapp.com/gun',
+        'https://gun-eu.herokuapp.com/gun'
     ]);
     window.isCloudActive = true;
-    const studioKey = 'GameForge_Professional_Studio_Primary_v2';
+    const studioKey = 'GameForge_Pro_Global_v21'; // New unique namespace
 
     const statusBadge = document.getElementById('server-status');
     if(statusBadge) {
@@ -79,7 +82,10 @@ try {
         if(idx === -1) {
             state.users.push(u);
         } else {
-            state.users[idx] = { ...state.users[idx], ...u };
+            // Only update if cloud has newer data
+            if((u.updatedAt || 0) > (state.users[idx].updatedAt || 0)) {
+                state.users[idx] = { ...state.users[idx], ...u };
+            }
         }
         if(!views.dashboard.classList.contains('hidden')) renderTeam();
     });
@@ -91,7 +97,10 @@ try {
         if(idx === -1) {
             state.tasks.push(t);
         } else {
-            state.tasks[idx] = { ...state.tasks[idx], ...t };
+            // Only update if cloud has newer data
+            if((t.updatedAt || 0) > (state.tasks[idx].updatedAt || 0)) {
+                state.tasks[idx] = { ...state.tasks[idx], ...t };
+            }
         }
         if(!views.dashboard.classList.contains('hidden')) renderDashboard();
     });
@@ -104,7 +113,10 @@ try {
         if(idx === -1) {
             state.pendingActions.push(parsedAction);
         } else {
-            state.pendingActions[idx] = parsedAction;
+            // Priority to newer data
+            if((a.updatedAt || 0) > (state.pendingActions[idx].updatedAt || 0)) {
+                state.pendingActions[idx] = parsedAction;
+            }
         }
         if(!views.dashboard.classList.contains('hidden')) renderAdmin();
     });
@@ -112,7 +124,11 @@ try {
     // LISTENER: Logs
     window.cloud.get(studioKey + '_log').on((data) => {
         if(data && data.items) {
-            state.activityLog = JSON.parse(data.items);
+            const cloudLog = JSON.parse(data.items);
+            // Simple log merge: if cloud has more/newer logs, take it
+            if(cloudLog.length >= state.activityLog.length) {
+                state.activityLog = cloudLog;
+            }
             if(!views.dashboard.classList.contains('hidden')) renderTeam();
         }
     });
@@ -133,7 +149,18 @@ setInterval(() => {
 }, 10000); 
 
 // --- VIEW MANAGEMENT ---
-// (rest of the functions remain same, just updating the pulse and renderTeam)
+// Manual Sync Button
+const syncBtn = document.getElementById('manual-sync-btn');
+if(syncBtn) {
+    syncBtn.addEventListener('click', () => {
+        showNotice('success', 'Bulut verileri tazeleniyor...');
+        if(window.isCloudActive) {
+            saveState(); // Push our latest
+            // Gun.js handles the pull automatically via the 'on' listeners we already have.
+            location.hash = ''; // Just a tiny trigger
+        }
+    });
+}
 
 // --- UI UTILITIES ---
 window.togglePassword = (id) => {
@@ -486,10 +513,10 @@ const renderGeneral = () => {
                 <span class="task-dept">${t.dept} (Sorumlu: ${t.assignee})</span>
             </div>
             <div class="task-meta">
-                <span class="task-status" style="color:#FF2D78">${t.progress}</span>
+                <span class="task-status" style="color:#FF2D78">${t.status}</span>
             </div>
         </div>
-    `).join('') || '<p>Kritik görev yok.</p>';
+    `).join('') || '<p style="color:var(--text-secondary); text-align:center; padding:10px;">Şu an kritik görev bulunmuyor.</p>';
 };
 
 const renderDepts = () => {
