@@ -45,37 +45,64 @@ setInterval(() => {
 // --- VIEW MANAGEMENT ---
 // (rest of the functions remain same, just updating the pulse and renderTeam)
 
-const renderTeam = () => {
+const renderTeam = (filter = '') => {
     const list = document.getElementById('team-list');
     const now = Date.now();
     
-    list.innerHTML = state.users.map(u => {
-        // Online if last seen in last 30 seconds
+    const filteredUsers = state.users.filter(u => 
+        u.username.toLowerCase().includes(filter.toLowerCase()) || 
+        u.dept.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    list.innerHTML = filteredUsers.map(u => {
         const isOnline = (now - (u.lastSeen || 0)) < 30000;
+        const isMe = state.currentUser && u.username === state.currentUser.username;
         
         return `
-            <div class="user-card glass">
-                <div class="user-avatar">
+            <div class="user-card glass ${isMe ? 'me-card' : ''}">
+                <div class="user-avatar" style="border-color: ${isMe ? 'var(--accent-pink)' : 'var(--accent-cyan)'}">
                     ${u.username[0].toUpperCase()}
                     <span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>
                 </div>
-                <h4 style="color:var(--accent-cyan)">${u.username}</h4>
-                <p style="font-size:10px; color:var(--text-secondary)">${u.dept}</p>
-                <span class="${isOnline ? 'online-text' : 'offline-text'}">
-                    ${isOnline ? '● ÇEVRİMİÇİ' : '○ ÇEVRİMDIŞI'}
-                </span>
+                <h4 style="color:${isMe ? 'var(--accent-pink)' : 'var(--accent-cyan)'}">${u.username} ${isMe ? '(Siz)' : ''}</h4>
+                <p style="font-size:10px; color:var(--text-secondary); margin-bottom: 10px;">${u.dept}</p>
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                    <span class="${isOnline ? 'online-text' : 'offline-text'}">
+                        ${isOnline ? '● ÇEVRİMİÇİ' : '○ ÇEVRİMDIŞI'}
+                    </span>
+                    ${!isMe ? `<button onclick="mockMessage('${u.username}')" class="btn-outline-sm" style="font-size: 9px; padding: 4px 10px;">MESAJ GÖNDER</button>` : ''}
+                </div>
                 <p style="font-size:11px; margin-top:5px; opacity:0.7">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
             </div>
         `;
     }).join('');
 
     const logList = document.getElementById('activity-log');
-    logList.innerHTML = state.activityLog.map(l => `
-        <div class="log-item">
-            <span><strong>${l.user}:</strong> ${l.message}</span>
-            <span class="log-time">${l.time}</span>
-        </div>
-    `).join('');
+    if(logList) {
+        logList.innerHTML = state.activityLog.map(l => `
+            <div class="log-item">
+                <span><strong>${l.user}:</strong> ${l.message}</span>
+                <span class="log-time">${l.time}</span>
+            </div>
+        `).join('');
+    }
+};
+
+// Global search listener
+document.addEventListener('input', (e) => {
+    if(e.target.id === 'team-search') {
+        renderTeam(e.target.value);
+    }
+});
+
+// Mock Messaging
+window.mockMessage = (targetUser) => {
+    const chatWindow = document.getElementById('chat-window');
+    const chatBadge = document.querySelector('.chat-badge');
+    chatWindow.classList.remove('hidden');
+    if(chatBadge) chatBadge.style.display = 'none';
+    
+    addMessage(`${targetUser} komutanı ile güvenli hat kuruldu. Mesajınızı buraya yazabilirsiniz.`, 'bot');
 };
 const views = {
     landing: document.getElementById('landing-view'),

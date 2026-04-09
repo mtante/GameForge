@@ -936,6 +936,32 @@ h1, h2, h3, .logo {
     margin-bottom: 30px;
 }
 
+/* SEARCH & FLEX HEADER */
+.section-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 15px;
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    width: 250px;
+    transition: var(--transition);
+}
+
+.search-box input:focus {
+    width: 300px;
+    border-color: var(--accent-cyan);
+    background: rgba(255, 255, 255, 0.08);
+}
+
 /* Utilities */
 .hidden { display: none !important; }
 
