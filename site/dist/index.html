@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  <script type="module" crossorigin src="/GameForge/assets/index-BA_0TOEL.js"></script>
-  <link rel="stylesheet" crossorigin href="/GameForge/assets/index-CcEfIOJ2.css">
+  <script type="module" crossorigin src="/GameForge/assets/index-tK2I6pF3.js"></script>
+  <link rel="stylesheet" crossorigin href="/GameForge/assets/index-B8cID3gN.css">
 </head>
 <body>
     <div id="particles-js"></div>
@@ -159,7 +159,7 @@
                     <div class="container">
                         <header class="dash-header">
                             <div>
-                                <h2 class="badge">GÖREV KONTROL MERKEZİ</h2>
+                                <h2 class="badge">GÖREV KONTROL MERKEZİ <span id="server-status" class="server-badge offline">LOCAL MODE</span></h2>
                                 <h1 id="dash-title">GENEL DURUM</h1>
                             </div>
                             <button id="do-logout" class="btn-outline-sm">ÇIKIŞ YAP</button>
@@ -330,8 +330,7 @@
             </div>
         </div>
     </div>
-    <!-- Firebase SDKs (Real-time Server Prep) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- Gun.js (Decentralized Zero-Config Sync) -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 </body>
 </html>

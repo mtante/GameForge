@@ -962,6 +962,28 @@ h1, h2, h3, .logo {
     background: rgba(255, 255, 255, 0.08);
 }
 
+.server-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 10px;
+    vertical-align: middle;
+    letter-spacing: 1px;
+}
+
+.server-badge.online {
+    background: rgba(0, 255, 157, 0.15);
+    color: #00FF9D;
+    border: 1px solid #00FF9D;
+    box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+}
+
+.server-badge.offline {
+    background: rgba(255, 45, 120, 0.15);
+    color: #FF2D78;
+    border: 1px solid #FF2D78;
+}
+
 /* Utilities */
 .hidden { display: none !important; }
 

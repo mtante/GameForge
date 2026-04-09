@@ -158,7 +158,7 @@
                     <div class="container">
                         <header class="dash-header">
                             <div>
-                                <h2 class="badge">GÖREV KONTROL MERKEZİ</h2>
+                                <h2 class="badge">GÖREV KONTROL MERKEZİ <span id="server-status" class="server-badge offline">LOCAL MODE</span></h2>
                                 <h1 id="dash-title">GENEL DURUM</h1>
                             </div>
                             <button id="do-logout" class="btn-outline-sm">ÇIKIŞ YAP</button>
@@ -329,9 +329,8 @@
             </div>
         </div>
     </div>
-    <!-- Firebase SDKs (Real-time Server Prep) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- Gun.js (Decentralized Zero-Config Sync) -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script type="module" src="./main.js"></script>
 </body>
 </html>

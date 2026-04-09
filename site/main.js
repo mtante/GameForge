@@ -35,49 +35,58 @@ const saveState = () => {
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
 
-    // Sync to Firebase if enabled
-    if(window.isFirebaseActive) {
-        window.db.ref('gameforge').set(state);
+    // Sync to Cloud if enabled
+    if(window.isCloudActive) {
+        window.cloud.get('gameforge_data').put({
+            users: JSON.stringify(state.users),
+            tasks: JSON.stringify(state.tasks),
+            pendingActions: JSON.stringify(state.pendingActions),
+            activityLog: JSON.stringify(state.activityLog)
+        });
     }
 };
 
-// --- SERVER (FIREBASE) INTEGRATION ---
-// NOTE: Admin needs to provide these keys for the "Server" to work.
-window.isFirebaseActive = false;
-const firebaseConfig = {
-    apiKey: "BURAYA_API_KEY_GELECEK",
-    authDomain: "PROJE_ID.firebaseapp.com",
-    databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
-    projectId: "PROJE_ID",
-    storageBucket: "PROJE_ID.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-};
+// --- ZERO-CONFIG DECENTRALIZED SYNC (GUN.JS) ---
+window.isCloudActive = false;
+try {
+    // Initializing with public relays - NO KEYS REQUIRED
+    window.cloud = Gun([
+        'https://gun-manhattan.herokuapp.com/gun',
+        'https://relay.peer.ooo/gun'
+    ]);
+    window.isCloudActive = true;
 
-if(firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        window.db = firebase.database();
-        window.isFirebaseActive = true;
-        
-        // Real-time listener: When anyone changes anything, update locally
-        window.db.ref('gameforge').on('value', (snapshot) => {
-            const cloudState = snapshot.val();
-            if(cloudState) {
-                state.users = cloudState.users || state.users;
-                state.tasks = cloudState.tasks || state.tasks;
-                state.pendingActions = cloudState.pendingActions || state.pendingActions;
-                state.activityLog = cloudState.activityLog || state.activityLog;
+    const statusBadge = document.getElementById('server-status');
+    if(statusBadge) {
+        statusBadge.innerText = "CLOUD SYNC: ACTIVE";
+        statusBadge.classList.remove('offline');
+        statusBadge.classList.add('online');
+    }
+
+    // Listener for cloud updates
+    window.cloud.get('gameforge_data').on((data) => {
+        if(data) {
+            // Merge carefully to avoid loops
+            const cloudUsers = data.users ? JSON.parse(data.users) : null;
+            const cloudTasks = data.tasks ? JSON.parse(data.tasks) : null;
+            const cloudActions = data.pendingActions ? JSON.parse(data.pendingActions) : null;
+            const cloudLog = data.activityLog ? JSON.parse(data.activityLog) : null;
+
+            if (cloudUsers) state.users = cloudUsers;
+            if (cloudTasks) state.tasks = cloudTasks;
+            if (cloudActions) state.pendingActions = cloudActions;
+            if (cloudLog) state.activityLog = cloudLog;
+
+            if(!views.dashboard.classList.contains('hidden')) {
                 renderDashboard();
                 updateAuthUI();
             }
-        });
-        console.log("GameForge Server: Bağlantı Kuruldu! (Real-time Active)");
-    } catch(e) {
-        console.error("Firebase Hatası:", e);
-    }
-} else {
-    console.warn("GameForge Server: Yerel Modda Çalışıyor (Server Anahtarları Eksik)");
+        }
+    });
+
+    console.log("GameForge Cloud: Decentralized Sync Active (No Config Needed)");
+} catch(e) {
+    console.error("Cloud Sync Hatası:", e);
 }
 
 // Pulse to keep session alive and update online status
