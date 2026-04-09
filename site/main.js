@@ -48,13 +48,13 @@ const saveState = () => {
 // --- FIREBASE KURULUMU (SERVER) ---
 // DİKKAT: Firebase'in çalışması için Google Firebase'den aldığın ayarları aşağıya yapıştır!
 const firebaseConfig = {
-    apiKey: "BURAYA_API_KEY_YAZIN",
-    authDomain: "PROJE_ID.firebaseapp.com",
-    databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
-    projectId: "PROJE_ID",
-    storageBucket: "PROJE_ID.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
+  apiKey: "AIzaSyBlJZoZrnq4r09WN7cLCnG0LfTFBm_sNj8",
+  authDomain: "gameforge-portal.firebaseapp.com",
+  databaseURL: "https://gameforge-portal-default-rtdb.firebaseio.com",
+  projectId: "gameforge-portal",
+  storageBucket: "gameforge-portal.firebasestorage.app",
+  messagingSenderId: "796460548515",
+  appId: "1:796460548515:web:2808400d787d62cd7b5a16"
 };
 
 window.isFirebaseActive = false;
