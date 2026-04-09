@@ -7,7 +7,7 @@ const Store = {
 
 let state = {
     users: Store.get('users', [
-        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin' }
+        { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() }
     ]),
     tasks: Store.get('tasks', [
         { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
@@ -19,6 +19,12 @@ let state = {
 };
 
 const saveState = () => {
+    // Before saving, ensure currentUser's lastSeen is up to date in the users array
+    if(state.currentUser) {
+        state.currentUser.lastSeen = Date.now();
+        const userIdx = state.users.findIndex(u => u.username === state.currentUser.username);
+        if(userIdx > -1) state.users[userIdx].lastSeen = state.currentUser.lastSeen;
+    }
     Store.set('users', state.users);
     Store.set('tasks', state.tasks);
     Store.set('pendingActions', state.pendingActions);
@@ -26,7 +32,51 @@ const saveState = () => {
     Store.set('currentUser', state.currentUser);
 };
 
+// Pulse to keep session alive and update online status
+setInterval(() => {
+    if(state.currentUser) {
+        saveState();
+        if(views.dashboard.classList.contains('active') || !views.dashboard.classList.contains('hidden')) {
+            renderTeam(); // Refresh online statuses periodically
+        }
+    }
+}, 10000); 
+
 // --- VIEW MANAGEMENT ---
+// (rest of the functions remain same, just updating the pulse and renderTeam)
+
+const renderTeam = () => {
+    const list = document.getElementById('team-list');
+    const now = Date.now();
+    
+    list.innerHTML = state.users.map(u => {
+        // Online if last seen in last 30 seconds
+        const isOnline = (now - (u.lastSeen || 0)) < 30000;
+        
+        return `
+            <div class="user-card glass">
+                <div class="user-avatar">
+                    ${u.username[0].toUpperCase()}
+                    <span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>
+                </div>
+                <h4 style="color:var(--accent-cyan)">${u.username}</h4>
+                <p style="font-size:10px; color:var(--text-secondary)">${u.dept}</p>
+                <span class="${isOnline ? 'online-text' : 'offline-text'}">
+                    ${isOnline ? '● ÇEVRİMİÇİ' : '○ ÇEVRİMDIŞI'}
+                </span>
+                <p style="font-size:11px; margin-top:5px; opacity:0.7">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
+            </div>
+        `;
+    }).join('');
+
+    const logList = document.getElementById('activity-log');
+    logList.innerHTML = state.activityLog.map(l => `
+        <div class="log-item">
+            <span><strong>${l.user}:</strong> ${l.message}</span>
+            <span class="log-time">${l.time}</span>
+        </div>
+    `).join('');
+};
 const views = {
     landing: document.getElementById('landing-view'),
     login: document.getElementById('login-view'),
