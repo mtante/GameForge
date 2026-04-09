@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  <script type="module" crossorigin src="/GameForge/assets/index-C8t89tRc.js"></script>
+  <script type="module" crossorigin src="/GameForge/assets/index-DjKiV2Cu.js"></script>
   <link rel="stylesheet" crossorigin href="/GameForge/assets/index-B9mqzWN8.css">
 </head>
 <body>
@@ -283,6 +283,10 @@
                             <option value="YÜKSEK">YÜKSEK</option>
                             <option value="KRİTİK">KRİTİK</option>
                         </select>
+                    </div>
+                    <div class="input-group">
+                        <label>BAŞLANGIÇ İLERLEMESİ: <span id="progress-val-label" style="color:var(--accent-cyan);">%0</span></label>
+                        <input type="range" id="task-progress" min="0" max="100" value="0" style="width:100%; margin-top:10px; cursor:pointer" oninput="document.getElementById('progress-val-label').innerText = '%' + this.value">
                     </div>
                     <div class="modal-footer">
                         <button id="save-task" class="btn-glow full-width">ONAYA GÖNDER</button>
