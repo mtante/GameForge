@@ -501,15 +501,35 @@ const renderDashboard = () => {
 };
 
 const renderGeneral = () => {
+    // 1. Update Global Progress Bar
+    const totalTasks = state.tasks.length;
+    let avgProgress = 0;
+    if(totalTasks > 0) {
+        let totalProgressSum = state.tasks.reduce((sum, t) => sum + (parseInt(t.progress) || 0), 0);
+        avgProgress = Math.round(totalProgressSum / totalTasks);
+    }
+    const pBar = document.getElementById('general-progress-bar');
+    const pText = document.getElementById('general-progress-text');
+    if(pBar && pText) {
+        pBar.style.width = avgProgress + '%';
+        pText.innerText = '%' + avgProgress + ' TAMAMLANDI';
+    }
+
+    // 2. Render Critical Tasks
     const list = document.getElementById('critical-tasks-list');
+    if(!list) return;
     const criticals = state.tasks.filter(t => t.critical && !t.done);
     list.innerHTML = criticals.map(t => `
-        <div class="task-item">
+        <div class="task-item glass" style="border-left: 3px solid var(--accent-pink);">
             <div class="task-info">
                 <h4>${t.title}</h4>
                 <span class="task-dept">${t.dept} (Sorumlu: ${t.assignee})</span>
+                <div style="margin-top:5px; width:100%; height:4px; background:rgba(255,255,255,0.1); border-radius:2px;">
+                    <div style="width:${parseInt(t.progress) || 0}%; height:100%; background:var(--accent-pink); border-radius:2px;"></div>
+                </div>
             </div>
             <div class="task-meta">
+                <span style="font-size:10px; font-weight:bold; color:var(--accent-pink);">%${parseInt(t.progress) || 0}</span>
                 <span class="task-status" style="color:#FF2D78">${t.status}</span>
             </div>
         </div>
