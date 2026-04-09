@@ -283,6 +283,10 @@
                             <option value="KRİTİK">KRİTİK</option>
                         </select>
                     </div>
+                    <div class="input-group">
+                        <label>BAŞLANGIÇ İLERLEMESİ: <span id="progress-val-label" style="color:var(--accent-cyan);">%0</span></label>
+                        <input type="range" id="task-progress" min="0" max="100" value="0" style="width:100%; margin-top:10px; cursor:pointer" oninput="document.getElementById('progress-val-label').innerText = '%' + this.value">
+                    </div>
                     <div class="modal-footer">
                         <button id="save-task" class="btn-glow full-width">ONAYA GÖNDER</button>
                     </div>

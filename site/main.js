@@ -73,22 +73,21 @@ if(firebaseConfig.apiKey !== "BURAYA_API_KEY_YAZIN") {
 
         // Real-time "Canlı İzleme" Listener
         window.db.ref('gameforge').on('value', (snapshot) => {
-            const cloudData = snapshot.val();
-            if(cloudData) {
-                // Verileri sadece yenisi varsa birleştirerek veya direkt alarak aktar
-                state.users = cloudData.users || state.users;
-                state.tasks = cloudData.tasks || state.tasks;
-                state.pendingActions = cloudData.pendingActions || state.pendingActions;
-                state.activityLog = cloudData.activityLog || state.activityLog;
-                
-                Store.set('users', state.users);
-                Store.set('tasks', state.tasks);
-                Store.set('pendingActions', state.pendingActions);
-                Store.set('activityLog', state.activityLog);
+            const cloudData = snapshot.val() || {}; // Ensure we don't crash on null
 
-                if(!views.dashboard.classList.contains('hidden')) {
-                    renderDashboard();
-                }
+            // VERY IMPORTANT: Firebase strips empty arrays. We MUST use || [] to prevent ghosting deleted items!
+            state.users = cloudData.users || [];
+            state.tasks = cloudData.tasks || [];
+            state.pendingActions = cloudData.pendingActions || [];
+            state.activityLog = cloudData.activityLog || [];
+                
+            Store.set('users', state.users);
+            Store.set('tasks', state.tasks);
+            Store.set('pendingActions', state.pendingActions);
+            Store.set('activityLog', state.activityLog);
+
+            if(!views.dashboard.classList.contains('hidden')) {
+                renderDashboard();
             }
         });
 
@@ -364,14 +363,29 @@ const requestAction = (type, data) => {
 
 const processAction = (action) => {
     if(action.type === 'ADD') {
-        const newTask = { ...action.data, id: Date.now(), assignee: action.user, done: false, status: 'AKTİF', progress: '%0' };
+        const pVal = action.data.progress || 0;
+        const newTask = { ...action.data, id: Date.now(), assignee: action.user, done: false, status: 'AKTİF', progress: pVal };
         state.tasks.push(newTask);
         logActivity(action.user, `Yeni görev eklendi: ${newTask.title}`, 'success');
         showNotice('success', 'Yeni görev başarıyla eklendi.');
     } else if(action.type === 'DELETE') {
-        state.tasks = state.tasks.filter(t => t.id !== action.data.id);
+        state.tasks = state.tasks.filter(t => t.id != action.data.id);
         logActivity(action.user, `Görev silindi.`, 'danger');
         showNotice('error', 'Görev silindi.');
+    } else if(action.type === 'UPDATE_PROGRESS') {
+        const task = state.tasks.find(t => t.id == action.data.id);
+        if(task) {
+            task.progress = action.data.progress;
+            if(task.progress >= 100) {
+                task.done = true;
+                task.status = 'TAMAMLANDI';
+                task.progress = 100;
+            } else {
+                task.done = false;
+                task.status = 'AKTİF';
+            }
+            logActivity(action.user, `İlerleme güncellendi: ${task.title} (%${task.progress})`, 'info');
+        }
     } else if(action.type === 'COMPLETE') {
         const task = state.tasks.find(t => t.id === action.data.id);
         if(task) {
@@ -389,13 +403,9 @@ const processAction = (action) => {
             showNotice('warn', 'Görev tekrar aktifleştirildi.');
         }
     } else if(action.type === 'DELETE_USER') {
-        const studioKey = 'GameForge_Pro_Global_v21';
         state.users = state.users.filter(u => u.username !== action.data.username);
-        if(window.isCloudActive) {
-            window.cloud.get(studioKey + '_users').get(action.data.username).put(null);
-        }
         logActivity(action.user, `${action.data.username} ekibi terk etti.`, 'danger');
-        showNotice('error', 'Kullanıcı silindi.');
+        showNotice('error', 'Kullanıcı kalıcı olarak silindi.');
     }
     saveState();
 };
@@ -460,9 +470,26 @@ document.getElementById('save-task').addEventListener('click', () => {
     const title = document.getElementById('task-title').value;
     const dept = document.getElementById('task-dept').value;
     const priority = document.getElementById('task-priority').value;
+    const progress = parseInt(document.getElementById('task-progress').value) || 0;
     if(!title) return alert('Başlık boş olamaz!');
-    requestAction('ADD', { title, dept, priority, critical: priority === 'KRİTİK' });
+    
+    requestAction('ADD', { title, dept, priority, critical: priority === 'KRİTİK', progress });
+    
+    // Reset Form
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-progress').value = 0;
+    document.getElementById('progress-val-label').innerText = '%0';
 });
+
+window.promptUpdateProgress = (id, currentVal) => {
+    const newVal = prompt(`Yeni ilerleme yüzdesini girin (Mevcut: %${currentVal})`, currentVal);
+    if(newVal !== null && !isNaN(newVal)) {
+        let p = parseInt(newVal);
+        if(p < 0) p = 0;
+        if(p > 100) p = 100;
+        requestAction('UPDATE_PROGRESS', { id, progress: p });
+    }
+};
 
 // --- RENDERERS ---
 const renderDashboard = () => {
@@ -510,12 +537,21 @@ const renderDepts = () => {
 const renderAllTasks = () => {
     const list = document.getElementById('all-tasks-list');
     if(!list) return;
-    list.innerHTML = state.tasks.map(t => `
+    list.innerHTML = state.tasks.map(t => {
+        const safeProg = parseInt(t.progress) || 0;
+        return `
         <div class="task-item ${t.critical ? 'priority-high' : ''}" style="opacity: ${t.done ? 0.6 : 1}">
             <div class="task-info">
                 <h4 style="text-decoration: ${t.done ? 'line-through' : 'none'}">${t.title}</h4>
                 <span class="task-dept">${t.dept} | Sorumlu: ${t.assignee}</span>
                 ${t.critical ? '<span style="font-size:9px; background:var(--accent-pink); color:white; padding:1px 5px; border-radius:3px; margin-left:10px">KRİTİK</span>' : ''}
+                
+                <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                    <div style="flex-grow:1; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; position:relative; cursor:pointer;" onclick="promptUpdateProgress(${t.id}, ${safeProg})" title="İlerlemeyi Güncelle">
+                        <div style="width:${safeProg}%; height:100%; background:var(--accent-cyan); border-radius:4px; transition:width 0.3s ease;"></div>
+                    </div>
+                    <span style="font-size:10px; color:var(--accent-cyan); font-weight:bold">%${safeProg}</span>
+                </div>
             </div>
             <div class="task-meta" style="display:flex; align-items:center; gap:12px">
                 <span class="task-status" style="color: ${t.done ? '#00FF9D' : '#FF2D78'}">${t.status}</span>
@@ -525,7 +561,7 @@ const renderAllTasks = () => {
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 };
 
 const renderAdmin = () => {
@@ -548,6 +584,10 @@ const renderAdmin = () => {
         if(a.type === 'DELETE') {
             const task = state.tasks.find(t => t.id === a.data.id);
             details = `<strong>GÖREV SİLME:</strong> ${task ? task.title : 'Bilinmeyen Görev'}`;
+        }
+        if(a.type === 'UPDATE_PROGRESS') {
+            const task = state.tasks.find(t => t.id == a.data.id);
+            details = `<strong>İLERLEME GÜNCELLEMESİ:</strong> ${task ? task.title : 'Bilinmeyen'} (Yeni: %${a.data.progress})`;
         }
         if(a.type === 'REACTIVATE') {
             const task = state.tasks.find(t => t.id === a.data.id);
