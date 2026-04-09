@@ -359,26 +359,6 @@ const renderAllTasks = () => {
     `).join('');
 };
 
-const renderTeam = () => {
-    const list = document.getElementById('team-list');
-    list.innerHTML = state.users.map(u => `
-        <div class="user-card glass">
-            <div class="user-avatar">${u.username[0].toUpperCase()}</div>
-            <h4 style="color:var(--accent-cyan)">${u.username}</h4>
-            <p style="font-size:10px; color:var(--text-secondary)">${u.dept}</p>
-            <p style="font-size:11px; margin-top:5px">${u.role === 'admin' ? '🛡️ Commander' : '👤 Personel'}</p>
-        </div>
-    `).join('');
-
-    const logList = document.getElementById('activity-log');
-    logList.innerHTML = state.activityLog.map(l => `
-        <div class="log-item">
-            <span><strong>${l.user}:</strong> ${l.message}</span>
-            <span class="log-time">${l.time}</span>
-        </div>
-    `).join('');
-};
-
 const renderAdmin = () => {
     const list = document.getElementById('pending-actions-list');
     list.innerHTML = state.pendingActions.map(a => `
