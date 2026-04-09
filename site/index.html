@@ -119,27 +119,50 @@
                         <header class="dash-header">
                             <div>
                                 <h2 class="badge">GÖREV KONTROL MERKEZİ</h2>
-                                <h1>KOMUTA PANELİ</h1>
+                                <h1 id="dash-title">GENEL DURUM</h1>
                             </div>
                             <button id="do-logout" class="btn-outline-sm">ÇIKIŞ YAP</button>
                         </header>
-                        
-                        <div class="dash-grid">
-                            <!-- Stats -->
-                            <div class="stat-card glass">
-                                <h3>PROJE İLERLEMESİ</h3>
-                                <div class="progress-container">
-                                    <div class="progress-bar" style="width: 75%"></div>
-                                </div>
-                                <span class="progress-text">%75 TAMAMLANDI</span>
-                            </div>
 
-                            <!-- Critical Tasks -->
-                            <div class="tasks-column">
-                                <h3 class="section-label">KRİTİK GÖREVLER</h3>
-                                <div id="critical-tasks-list">
-                                    <!-- Dynamic content -->
+                        <!-- Dashboard Navigation -->
+                        <nav class="dash-nav">
+                            <button class="dash-tab active" data-mod="general">GENEL DURUM</button>
+                            <button class="dash-tab" data-mod="depts">DEPARTMANLAR</button>
+                            <button class="dash-tab" data-mod="tasks">TÜM GÖREVLER</button>
+                        </nav>
+                        
+                        <div id="mod-general" class="dash-module active">
+                            <div class="dash-grid">
+                                <!-- Stats -->
+                                <div class="stat-card glass">
+                                    <h3>PROJE İLERLEMESİ</h3>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: 75%"></div>
+                                    </div>
+                                    <span class="progress-text">%75 TAMAMLANDI</span>
                                 </div>
+
+                                <!-- Critical Tasks -->
+                                <div class="tasks-column">
+                                    <h3 class="section-label">KRİTİK GÖREVLER</h3>
+                                    <div id="critical-tasks-list">
+                                        <!-- Dynamic content -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="mod-depts" class="dash-module hidden">
+                            <h3 class="section-label">DEPARTMANLAR</h3>
+                            <div id="departments-list" class="departments-grid">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+
+                        <div id="mod-tasks" class="dash-module hidden">
+                            <h3 class="section-label">TÜM GÖREVLER</h3>
+                            <div id="all-tasks-list" class="tasks-column">
+                                <!-- Dynamic content -->
                             </div>
                         </div>
                     </div>

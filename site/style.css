@@ -583,6 +583,111 @@ h1, h2, h3, .logo {
     letter-spacing: 1px;
 }
 
+/* Dashboard Navigation */
+.dash-nav {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.dash-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.dash-tab:hover {
+    color: var(--accent-cyan);
+    background: rgba(0, 255, 157, 0.05);
+}
+
+.dash-tab.active {
+    color: var(--bg-deep);
+    background: var(--accent-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+/* Dashboard Modules */
+.dash-module {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.dash-module.active {
+    display: block;
+}
+
+.departments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.dept-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+}
+
+.dept-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dept-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dept-icon {
+    font-size: 32px;
+}
+
+.dept-info h4 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.dept-info p {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.dept-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.dept-task-count {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+}
+
+.dept-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
 .dash-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;

@@ -58,10 +58,41 @@ document.getElementById('do-logout').addEventListener('click', () => {
 
 // Dashboard Logic
 let tasks = [
-    { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "%80", done: false },
-    { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "%40", done: false },
-    { id: 3, title: "Düşman yapay zeka sistemi", dept: "YAZILIM", status: "%20", done: false }
+    { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true },
+    { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true },
+    { id: 3, title: "Düşman yapay zeka sistemi", dept: "YAZILIM", status: "AKTİF", progress: "%20", done: false, critical: true },
+    { id: 4, title: "Ara sahne müzikleri", dept: "SES", status: "BEKLİYOR", progress: "%0", done: false, critical: false },
+    { id: 5, title: "Optimizasyon testleri", dept: "KALİTE GÜVENCE", status: "İNCELEME", progress: "%90", done: false, critical: false },
+    { id: 6, title: "Oyun içi satın alım arayüzü", dept: "TASARIM", status: "AKTİF", progress: "%60", done: false, critical: false }
 ];
+
+const departments = [
+    { name: "YAZILIM", emoji: "⚙️", count: 2, color: "var(--accent-cyan)", desc: "Oyun motoru, mekanikler ve yapay zeka." },
+    { name: "TASARIM", emoji: "🎨", count: 2, color: "var(--accent-purple)", desc: "Konsept, 3D modeller ve UI tasarımı." },
+    { name: "SES", emoji: "🎵", count: 1, color: "var(--accent-gold)", desc: "Müzik, efektler ve seslendirmeler." },
+    { name: "KALİTE GÜVENCE", emoji: "🛡️", count: 1, color: "var(--accent-pink)", desc: "Hata bulma ve performans." }
+];
+
+// Tab Logic
+document.querySelectorAll('.dash-tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        // Toggle tabs
+        document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        // Show correct module
+        const mod = e.target.getAttribute('data-mod');
+        document.querySelectorAll('.dash-module').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.dash-module').forEach(m => m.classList.remove('active'));
+        
+        const activeMod = document.getElementById('mod-' + mod);
+        activeMod.classList.remove('hidden');
+        activeMod.classList.add('active');
+
+        // Update Title
+        document.getElementById('dash-title').innerText = e.target.innerText;
+    });
+});
 
 window.toggleTask = (id) => {
     const task = tasks.find(t => t.id === id);
@@ -73,18 +104,59 @@ window.toggleTask = (id) => {
 };
 
 const renderTasks = () => {
-    const list = document.getElementById('critical-tasks-list');
-    list.innerHTML = tasks.map(task => `
+    const criticalList = document.getElementById('critical-tasks-list');
+    const allTasksList = document.getElementById('all-tasks-list');
+    const deptsList = document.getElementById('departments-list');
+
+    // Render Critical Tasks
+    const criticalHtml = tasks.filter(t => t.critical).map(task => `
         <div class="task-item" style="cursor: pointer; border-color: ${task.done ? '#00FF9D' : 'rgba(255,255,255,0.05)'}; opacity: ${task.done ? '0.6' : '1'}; transition: all 0.3s;" onclick="toggleTask(${task.id})">
             <div class="task-info">
                 <h4 style="text-decoration: ${task.done ? 'line-through' : 'none'}">${task.title}</h4>
                 <span class="task-dept">${task.dept}</span>
             </div>
             <div class="task-meta">
-                <span class="task-status" style="color: ${task.done ? '#00FF9D' : '#FF2D78'}">${task.status}</span>
+                <span class="task-status" style="color: ${task.done ? '#00FF9D' : '#FF2D78'}">${task.done ? "TAMAM" : task.progress}</span>
             </div>
         </div>
     `).join('');
+    criticalList.innerHTML = criticalHtml || '<p style="color:var(--text-secondary)">Kritik görev bulunmuyor.</p>';
+
+    // Render All Tasks
+    allTasksList.innerHTML = tasks.map(task => `
+        <div class="task-item" style="cursor: pointer; border-color: ${task.done ? '#00FF9D' : 'rgba(255,255,255,0.05)'}; opacity: ${task.done ? '0.6' : '1'}; transition: all 0.3s;" onclick="toggleTask(${task.id})">
+            <div class="task-info">
+                <h4 style="text-decoration: ${task.done ? 'line-through' : 'none'}">${task.title}</h4>
+                <span class="task-dept">${task.dept}</span>
+            </div>
+            <div class="task-meta">
+                <span class="task-status" style="color: ${task.done ? '#00FF9D' : 'var(--text-secondary)'}">${task.status}</span>
+            </div>
+        </div>
+    `).join('');
+
+    // Render Departments
+    deptsList.innerHTML = departments.map(d => {
+        // dynamic count
+        const activeCount = tasks.filter(t => t.dept === d.name && !t.done).length;
+        
+        return `
+        <div class="dept-card" style="border-top: 3px solid ${d.color}">
+            <div class="dept-card-header">
+                <span class="dept-icon">${d.emoji}</span>
+                <div class="dept-info">
+                    <h4 style="color: ${d.color}">${d.name}</h4>
+                    <p>${d.desc}</p>
+                </div>
+            </div>
+            <div class="dept-stats">
+                <div>
+                    <div class="dept-label">AKTİF GÖREV</div>
+                    <div class="dept-task-count" style="color: ${d.color}">${activeCount}</div>
+                </div>
+            </div>
+        </div>
+    `}).join('');
 };
 
 // Loader Logic
