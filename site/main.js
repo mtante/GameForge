@@ -272,13 +272,11 @@ const showView = (viewName) => {
 // --- AUTH LOGIC ---
 const updateAuthUI = () => {
     if(!state.currentUser) return;
-    const isMainAdmin = state.currentUser.role === 'admin';
-    document.getElementById('admin-tab').classList.toggle('hidden', !isMainAdmin);
     document.getElementById('user-info-text').innerText = `Oturum Sahibi: ${state.currentUser.username} (${state.currentUser.dept})`;
     
-    // Approval badge
+    // Approval badge visibility for everyone
     const badge = document.getElementById('approval-badge');
-    if(isMainAdmin && state.pendingActions.length > 0) {
+    if(state.pendingActions.length > 0) {
         badge.classList.remove('hidden');
     } else {
         badge.classList.add('hidden');
@@ -428,9 +426,10 @@ const processAction = (action) => {
             showNotice('warn', 'Görev tekrar aktifleştirildi.');
         }
     } else if(action.type === 'DELETE_USER') {
+        const studioKey = 'GameForge_Pro_Global_v21';
         state.users = state.users.filter(u => u.username !== action.data.username);
         if(window.isCloudActive) {
-            window.cloud.get('gf_users').get(action.data.username).put(null);
+            window.cloud.get(studioKey + '_users').get(action.data.username).put(null);
         }
         logActivity(action.user, `${action.data.username} ekibi terk etti.`, 'danger');
         showNotice('error', 'Kullanıcı silindi.');
@@ -547,6 +546,7 @@ const renderDepts = () => {
 
 const renderAllTasks = () => {
     const list = document.getElementById('all-tasks-list');
+    if(!list) return;
     list.innerHTML = state.tasks.map(t => `
         <div class="task-item ${t.critical ? 'priority-high' : ''}" style="opacity: ${t.done ? 0.6 : 1}">
             <div class="task-info">
@@ -567,6 +567,14 @@ const renderAllTasks = () => {
 
 const renderAdmin = () => {
     const list = document.getElementById('pending-actions-list');
+    if(!list) return;
+    const isAdmin = state.currentUser && state.currentUser.role === 'admin';
+
+    if(state.pendingActions.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:20px;">Şu an bekleyen bir onay bulunmuyor.</p>';
+        return;
+    }
+
     list.innerHTML = state.pendingActions.map(a => {
         let details = '';
         if(a.type === 'ADD') details = `<strong>YENİ GÖREV:</strong> ${a.data.title}`;
@@ -578,21 +586,29 @@ const renderAdmin = () => {
             const task = state.tasks.find(t => t.id === a.data.id);
             details = `<strong>GÖREV SİLME:</strong> ${task ? task.title : 'Bilinmeyen Görev'}`;
         }
+        if(a.type === 'REACTIVATE') {
+            const task = state.tasks.find(t => t.id === a.data.id);
+            details = `<strong>YENİDEN AKTİFLEŞTİRME:</strong> ${task ? task.title : 'Bilinmeyen Görev'}`;
+        }
 
         return `
-            <div class="task-item glass">
+            <div class="task-item glass" style="border-left: 3px solid var(--accent-gold); margin-bottom:10px;">
                 <div class="task-info">
                     <span class="pending-badge">${a.type} TALEBİ</span>
-                    <h4 style="margin-top:5px">${details}</h4>
-                    <p style="font-size:12px; color:var(--text-secondary)">Talep Eden: ${a.user} | Saat: ${a.time}</p>
+                    <h4 style="margin-top:5px; font-size:14px;">${details}</h4>
+                    <p style="font-size:11px; color:var(--text-secondary); margin-top:5px;">Talep Eden: ${a.user} | Saat: ${a.time}</p>
                 </div>
-                <div class="action-btns">
-                    <button class="btn-approve" onclick="approveAction(${a.id})">ONAYLA</button>
-                    <button class="btn-reject" onclick="openReject(${a.id})">REDDET</button>
+                <div class="action-btns" style="margin-top:10px;">
+                    ${isAdmin ? `
+                        <button class="btn-approve" onclick="approveAction(${a.id})">ONAYLA</button>
+                        <button class="btn-reject" onclick="openReject(${a.id})">REDDET</button>
+                    ` : `
+                        <span style="font-size:10px; color:var(--accent-gold); letter-spacing:1px; font-weight:700">KOMUTAN ONAYI BEKLENİYOR...</span>
+                    `}
                 </div>
             </div>
         `;
-    }).join('') || '<p style="color:var(--text-secondary); text-align:center; padding:20px;">Şu an bekleyen bir komuta talebi bulunmuyor.</p>';
+    }).join('');
 };
 
 // --- OTHERS ---
