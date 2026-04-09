@@ -34,7 +34,51 @@ const saveState = () => {
     Store.set('pendingActions', state.pendingActions);
     Store.set('activityLog', state.activityLog);
     Store.set('currentUser', state.currentUser);
+
+    // Sync to Firebase if enabled
+    if(window.isFirebaseActive) {
+        window.db.ref('gameforge').set(state);
+    }
 };
+
+// --- SERVER (FIREBASE) INTEGRATION ---
+// NOTE: Admin needs to provide these keys for the "Server" to work.
+window.isFirebaseActive = false;
+const firebaseConfig = {
+    apiKey: "BURAYA_API_KEY_GELECEK",
+    authDomain: "PROJE_ID.firebaseapp.com",
+    databaseURL: "https://PROJE_ID-default-rtdb.firebaseio.com",
+    projectId: "PROJE_ID",
+    storageBucket: "PROJE_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+};
+
+if(firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.database();
+        window.isFirebaseActive = true;
+        
+        // Real-time listener: When anyone changes anything, update locally
+        window.db.ref('gameforge').on('value', (snapshot) => {
+            const cloudState = snapshot.val();
+            if(cloudState) {
+                state.users = cloudState.users || state.users;
+                state.tasks = cloudState.tasks || state.tasks;
+                state.pendingActions = cloudState.pendingActions || state.pendingActions;
+                state.activityLog = cloudState.activityLog || state.activityLog;
+                renderDashboard();
+                updateAuthUI();
+            }
+        });
+        console.log("GameForge Server: Bağlantı Kuruldu! (Real-time Active)");
+    } catch(e) {
+        console.error("Firebase Hatası:", e);
+    }
+} else {
+    console.warn("GameForge Server: Yerel Modda Çalışıyor (Server Anahtarları Eksik)");
+}
 
 // Pulse to keep session alive and update online status
 setInterval(() => {
@@ -256,11 +300,10 @@ const requestAction = (type, data) => {
     };
     
     if(state.currentUser.role === 'admin') {
-        // Auto-approve if admin
         processAction(action);
     } else {
         state.pendingActions.push(action);
-        logActivity(state.currentUser.username, `${type === 'ADD' ? 'Yeni görev ekleme' : 'İşlem'} onaya gönderildi.`, 'warn');
+        logActivity(state.currentUser.username, `${type} onaya gönderildi.`, 'warn');
         saveState();
         alert('İşleminiz komutan onayına gönderildi.');
     }
@@ -282,6 +325,13 @@ const processAction = (action) => {
             task.done = true;
             task.status = 'TAMAMLANDI';
             logActivity(action.user, `Görev tamamlandı: ${task.title}`, 'success');
+        }
+    } else if(action.type === 'REACTIVATE') {
+        const task = state.tasks.find(t => t.id === action.data.id);
+        if(task) {
+            task.done = false;
+            task.status = 'AKTİF';
+            logActivity(action.user, `Görev tekrar açıldı: ${task.title}`, 'warn');
         }
     }
     saveState();
@@ -328,7 +378,13 @@ document.getElementById('confirm-reject').addEventListener('click', () => {
 // Task Interactions
 window.handleTaskTitleClick = (id) => {
     const task = state.tasks.find(t => t.id === id);
-    if(task && !task.done) {
+    if(!task) return;
+    
+    if(task.done) {
+        if(confirm('Bu görevi tekrar aktif etmek (Geri Al) istiyor musunuz?')) {
+            requestAction('REACTIVATE', { id });
+        }
+    } else {
         requestAction('COMPLETE', { id });
     }
 };
