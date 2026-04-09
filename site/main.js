@@ -8,7 +8,7 @@ const Store = {
 let state = {
     users: Store.get('users', [
         { username: 'admin', password: 'atss19', dept: 'YÖNETİM', role: 'admin', lastSeen: Date.now() }
-    ]),
+    ]).filter(u => !['Mehmet_Dev', 'Ayşe_Art', 'Can_Sound'].includes(u.username)),
     tasks: Store.get('tasks', [
         { id: 1, title: "Ana karakter hareket mekaniği", dept: "YAZILIM", status: "AKTİF", progress: "%80", done: false, critical: true, assignee: 'admin' },
         { id: 2, title: "Bölüm 1 harita tasarımı", dept: "TASARIM", status: "AKTİF", progress: "%40", done: false, critical: true, assignee: 'admin' }
