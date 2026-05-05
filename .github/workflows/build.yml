@@ -1,0 +1,62 @@
+name: 🎮 GameForge Build & Release
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Build APK (split by ABI)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameForge-APK-${{ github.run_number }}-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-*-release.apk
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha.substring(0, 7);
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: [
+                '## 🎮 GameForge APK Build #${{ github.run_number }}',
+                '',
+                '✅ Build başarıyla tamamlandı!',
+                '',
+                `**Commit:** \`${sha}\``,
+                `**APK İndir:** [Actions sayfasına git](${runUrl}) → Artifacts bölümünden indir`,
+                '',
+                '> APK 30 gün saklanır.'
+              ].join('\n')
+            });

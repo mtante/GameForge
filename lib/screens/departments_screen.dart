@@ -54,8 +54,8 @@ class _DepartmentsScreenState extends State<DepartmentsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Text(
                 'DEPARTMANLAR',
                 style: TextStyle(
@@ -92,9 +92,7 @@ class _DepartmentsScreenState extends State<DepartmentsScreen>
                             : AppTheme.bgCard,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected
-                              ? dInfo.color
-                              : AppTheme.borderGlow,
+                          color: isSelected ? dInfo.color : AppTheme.borderGlow,
                           width: isSelected ? 1.5 : 1,
                         ),
                         boxShadow: isSelected
@@ -175,7 +173,7 @@ class _DepartmentsScreenState extends State<DepartmentsScreen>
                             ),
                             Text(
                               info.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Rajdhani',
                                 fontSize: 13,
                                 color: AppTheme.textSecondary,
@@ -196,7 +194,7 @@ class _DepartmentsScreenState extends State<DepartmentsScreen>
                               color: info.color,
                             ),
                           ),
-                          Text(
+                          const Text(
                             'GÖREV',
                             style: TextStyle(
                               fontFamily: 'Rajdhani',
@@ -243,7 +241,7 @@ class _DepartmentsScreenState extends State<DepartmentsScreen>
                           Text(info.emoji,
                               style: const TextStyle(fontSize: 40)),
                           const SizedBox(height: 12),
-                          Text(
+                          const Text(
                             'Bu departmanda görev yok',
                             style: TextStyle(
                               fontFamily: 'Rajdhani',

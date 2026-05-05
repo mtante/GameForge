@@ -53,45 +53,45 @@ class DepartmentInfo {
 
 class AppData {
   static final Map<Department, DepartmentInfo> departments = {
-    Department.dev: DepartmentInfo(
+    Department.dev: const DepartmentInfo(
       name: 'Yazılım',
       emoji: '⚙️',
       color: AppTheme.accentCyan,
       description: 'Oyun motoru, mekanikler, sistemler',
       icon: Icons.code_rounded,
     ),
-    Department.art: DepartmentInfo(
+    Department.art: const DepartmentInfo(
       name: 'Görsel Tasarım',
       emoji: '🎨',
       color: AppTheme.accentPink,
       description: 'Konsept, 3D, Karakterler',
       icon: Icons.palette_rounded,
     ),
-    Department.design: DepartmentInfo(
+    Department.design: const DepartmentInfo(
       name: 'Oyun Tasarımı',
       emoji: '🎮',
       color: AppTheme.accentPurple,
       description: 'Mekanik dengesi, bölüm tasarımı',
       icon: Icons.gamepad_rounded,
     ),
-    Department.audio: DepartmentInfo(
+    Department.audio: const DepartmentInfo(
       name: 'Ses & Müzik',
       emoji: '🎵',
       color: AppTheme.accentGold,
       description: 'Efektler, müzik, dublaj',
       icon: Icons.music_note_rounded,
     ),
-    Department.qa: DepartmentInfo(
+    Department.qa: const DepartmentInfo(
       name: 'Test & QA',
       emoji: '🛡️',
       color: AppTheme.accentGreen,
       description: 'Hata ayıklama, performans',
       icon: Icons.bug_report_rounded,
     ),
-    Department.pm: DepartmentInfo(
+    Department.pm: const DepartmentInfo(
       name: 'Üretim',
       emoji: '📋',
-      color: const Color(0xFFFF8C42), // Burnt Orange
+      color: Color(0xFFFF8C42), // Burnt Orange
       description: 'Yol haritası, kilometre taşları',
       icon: Icons.dashboard_rounded,
     ),

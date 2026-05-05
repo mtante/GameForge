@@ -36,7 +36,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               color: AppTheme.textPrimary, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(info.emoji + ' ' + info.name.toUpperCase()),
+        title: Text('${info.emoji} ${info.name.toUpperCase()}'),
         actions: [
           IconButton(
             icon: Icon(Icons.delete_outline_rounded,
@@ -61,7 +61,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 Expanded(
                   child: Text(
                     _task.title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Rajdhani',
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -98,7 +98,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             if (_task.description.isNotEmpty) ...[
               Text(
                 _task.description,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Rajdhani',
                   fontSize: 15,
                   color: AppTheme.textSecondary,
@@ -122,7 +122,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'PROGRESS',
                         style: TextStyle(
                           fontFamily: 'Orbitron',
@@ -173,7 +173,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             const SizedBox(height: 16),
 
             // Status selector
-            Text(
+            const Text(
               'STATUS',
               style: TextStyle(
                 fontFamily: 'Orbitron',
@@ -251,7 +251,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     '${_task.dueDate.day}/${_task.dueDate.month}/${_task.dueDate.year}',
                     isOverdue ? AppTheme.accentPink : AppTheme.textPrimary,
                     suffix: isOverdue
-                        ? Text(
+                        ? const Text(
                             '  OVERDUE',
                             style: TextStyle(
                               fontFamily: 'Orbitron',
@@ -276,7 +276,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     const Divider(color: AppTheme.borderGlow, height: 20),
                     Row(
                       children: [
-                        Icon(Icons.tag_rounded,
+                        const Icon(Icons.tag_rounded,
                             color: AppTheme.textSecondary, size: 16),
                         const SizedBox(width: 8),
                         Expanded(
@@ -328,7 +328,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         const SizedBox(width: 10),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Orbitron',
             fontSize: 9,
             letterSpacing: 1,

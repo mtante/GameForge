@@ -41,7 +41,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   void _submit() {
     if (_titleController.text.isEmpty || _assigneeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'Title and assignee are required',
             style: TextStyle(fontFamily: 'Rajdhani'),
@@ -83,7 +83,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         actions: [
           TextButton(
             onPressed: _submit,
-            child: Text(
+            child: const Text(
               'CREATE',
               style: TextStyle(
                 fontFamily: 'Orbitron',
@@ -204,7 +204,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   lastDate: DateTime.now().add(const Duration(days: 365)),
                   builder: (context, child) => Theme(
                     data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.dark(
+                      colorScheme: const ColorScheme.dark(
                         primary: AppTheme.accentCyan,
                         surface: AppTheme.bgCard,
                       ),
@@ -223,12 +223,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded,
+                    const Icon(Icons.calendar_today_rounded,
                         color: AppTheme.accentCyan, size: 18),
                     const SizedBox(width: 10),
                     Text(
                       '${_dueDate.day}/${_dueDate.month}/${_dueDate.year}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Rajdhani',
                         fontSize: 15,
                         color: AppTheme.textPrimary,
@@ -252,16 +252,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                     child: TextField(
                       controller: _tagController,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontFamily: 'Rajdhani', color: AppTheme.textPrimary),
                       onSubmitted: _addTag,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Add tag...',
                         hintStyle: TextStyle(
                             color: AppTheme.textSecondary,
                             fontFamily: 'Rajdhani'),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
+                        contentPadding: EdgeInsets.symmetric(
                             horizontal: 14, vertical: 12),
                       ),
                     ),
@@ -277,7 +277,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: AppTheme.accentCyan),
                     ),
-                    child: Icon(Icons.add, color: AppTheme.accentCyan, size: 20),
+                    child: const Icon(Icons.add, color: AppTheme.accentCyan, size: 20),
                   ),
                 ),
               ],
@@ -344,7 +344,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       ),
                     ],
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       '⚡  CREATE TASK',
                       style: TextStyle(
@@ -368,7 +368,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   Widget _label(String text) => Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Orbitron',
           fontSize: 10,
           letterSpacing: 2,
@@ -387,13 +387,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       child: TextField(
         controller: ctrl,
         maxLines: maxLines,
-        style: TextStyle(
+        style: const TextStyle(
             fontFamily: 'Rajdhani',
             color: AppTheme.textPrimary,
             fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(
+          hintStyle: const TextStyle(
               color: AppTheme.textSecondary, fontFamily: 'Rajdhani'),
           border: InputBorder.none,
           contentPadding:

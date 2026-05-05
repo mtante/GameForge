@@ -34,7 +34,7 @@ class _TasksScreenState extends State<TasksScreen> {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Row(
                 children: [
-                  Text(
+                  const Text(
                     'TÜM GÖREVLER',
                     style: TextStyle(
                       fontFamily: 'Orbitron',
@@ -55,7 +55,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     ),
                     child: Text(
                       '${tasks.length} görev',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Rajdhani',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -79,23 +79,23 @@ class _TasksScreenState extends State<TasksScreen> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: provider.setSearchQuery,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Rajdhani',
                     color: AppTheme.textPrimary,
                     fontSize: 15,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Görev, sorumlu, etiket ara...',
-                    hintStyle: TextStyle(
+                    hintStyle: const TextStyle(
                       color: AppTheme.textSecondary,
                       fontFamily: 'Rajdhani',
                       fontSize: 14,
                     ),
-                    prefixIcon: Icon(Icons.search_rounded,
+                    prefixIcon: const Icon(Icons.search_rounded,
                         color: AppTheme.textSecondary, size: 20),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear,
+                            icon: const Icon(Icons.clear,
                                 color: AppTheme.textSecondary, size: 18),
                             onPressed: () {
                               _searchController.clear();
@@ -196,13 +196,13 @@ class _TasksScreenState extends State<TasksScreen> {
 
             Expanded(
               child: tasks.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.search_off_rounded,
                               color: AppTheme.textSecondary, size: 48),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             'Görev bulunamadı',
                             style: TextStyle(

@@ -6,7 +6,6 @@ import 'dashboard_screen.dart';
 import 'departments_screen.dart';
 import 'tasks_screen.dart';
 import 'add_task_screen.dart';
-
 import 'project_info_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _pageController = PageController();
     _fabController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
     )..forward();
   }
 
@@ -49,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() => _currentIndex = index);
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOutCubic,
     );
   }
@@ -64,14 +63,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: _screens,
       ),
       floatingActionButton: ScaleTransition(
-        scale: _fabController,
+        scale: CurvedAnimation(
+          parent: _fabController,
+          curve: Curves.elasticOut,
+        ),
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppTheme.accentCyan.withOpacity(0.4),
-                blurRadius: 20,
+                color: AppTheme.accentCyan.withOpacity(0.45),
+                blurRadius: 24,
                 spreadRadius: 2,
               ),
             ],
@@ -80,26 +82,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider.value(
-                    value: Provider.of<TaskProvider>(context, listen: false),
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      ChangeNotifierProvider.value(
+                    value:
+                        Provider.of<TaskProvider>(context, listen: false),
                     child: const AddTaskScreen(),
                   ),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                          parent: animation, curve: Curves.easeOutCubic)),
+                      child: child,
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 320),
                 ),
               );
             },
-            backgroundColor: AppTheme.bgElevated,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             shape: const CircleBorder(),
             child: Container(
               width: 56,
               height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.accentCyan.withOpacity(0.5), width: 1.5),
+                gradient: AppTheme.primaryGradient,
               ),
               child: const Icon(
                 Icons.add_rounded,
-                color: AppTheme.accentCyan,
+                color: Colors.white,
                 size: 28,
               ),
             ),
@@ -109,10 +126,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppTheme.bgCard.withOpacity(0.9),
+          color: AppTheme.bgCard.withOpacity(0.95),
           border: const Border(
             top: BorderSide(color: AppTheme.borderGlow, width: 1),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         child: BottomAppBar(
           color: Colors.transparent,
@@ -132,14 +156,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 _NavItem(
                   icon: Icons.grid_view_rounded,
-                  label: 'DEPARTMANLAR',
+                  label: 'DEPARTMAN',
                   isSelected: _currentIndex == 1,
                   onTap: () => _onTabTap(1),
                 ),
                 const SizedBox(width: 60),
                 _NavItem(
                   icon: Icons.task_alt_rounded,
-                  label: 'KAYITLAR',
+                  label: 'GÖREVLER',
                   isSelected: _currentIndex == 2,
                   onTap: () => _onTabTap(2),
                 ),
@@ -178,10 +202,30 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Glow indicator dot
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isSelected ? 18 : 0,
+              height: isSelected ? 3 : 0,
+              margin: EdgeInsets.only(bottom: isSelected ? 4 : 0),
+              decoration: BoxDecoration(
+                gradient: isSelected ? AppTheme.primaryGradient : null,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.accentCyan.withOpacity(0.7),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
             Icon(
               icon,
               color: isSelected ? AppTheme.accentCyan : AppTheme.textSecondary,
@@ -192,10 +236,11 @@ class _NavItem extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontFamily: 'Rajdhani',
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: isSelected ? AppTheme.accentCyan : AppTheme.textSecondary,
+                color:
+                    isSelected ? AppTheme.accentCyan : AppTheme.textSecondary,
               ),
               child: Text(label),
             ),

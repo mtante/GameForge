@@ -37,7 +37,7 @@ class ProjectInfoScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'PROJE VERİLERİ',
           style: TextStyle(
             fontFamily: 'Orbitron',
@@ -47,7 +47,7 @@ class ProjectInfoScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
+        const Text(
           'NEON STRIKE: ORIGINS',
           style: TextStyle(
             fontFamily: 'Orbitron',
@@ -123,7 +123,7 @@ class ProjectInfoScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Orbitron',
           fontSize: 11,
           letterSpacing: 2,

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/task_model.dart';
 
 class TaskProvider extends ChangeNotifier {
-  List<TaskModel> _tasks = List.from(AppData.sampleTasks);
+  final List<TaskModel> _tasks = List.from(AppData.sampleTasks);
   Department? _selectedDepartment;
   TaskStatus? _selectedStatus;
   String _searchQuery = '';
